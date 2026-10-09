@@ -1,0 +1,191 @@
+<script>
+(() => {
+  const state = {
+    token: null, student: null, progress: null, version: 0,
+    saveTimer: null, saving: false, saveAgain: false, pendingSnapshot: null,
+    sessionId: null, startedAt: null, activeSeconds: 0, lastTick: 0,
+    lastKey: 0, activity: 'Typer Kids', activityTimer: null
+  };
+  const $ = id => document.getElementById(id);
+  let appOrigin = '';
+  try { appOrigin = new URL(window.TYPER_KIDS_URL).origin; } catch (_) {}
+
+  function call(name, ...args) {
+    return new Promise((resolve, reject) => google.script.run
+      .withSuccessHandler(resolve)
+      .withFailureHandler(e => reject(new Error(e && e.message || String(e))))[name](...args));
+  }
+  function uuid() {
+    return crypto && crypto.randomUUID
+      ? crypto.randomUUID().replace(/-/g, '_')
+      : 'id_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 14);
+  }
+  function message(text, error) {
+    $('login-message').textContent = text || '';
+    $('login-message').classList.toggle('error', !!error);
+  }
+  async function boot() {
+    if (!window.TYPER_KIDS_URL) {
+      message('The typing site is not connected yet. Ask your teacher to finish setup.', true);
+      return;
+    }
+    try {
+      const r = await call('getLoginRoster');
+      if (!r.ok) throw new Error(r.error);
+      $('login-student').innerHTML = '<option value="">Choose your name…</option>' +
+        r.students.map(s => `<option value="${escapeHtml(s.id)}" data-needs-pin="${s.needsPin ? '1' : '0'}">${escapeHtml(s.name)}</option>`).join('');
+      $('login-student').disabled = false;
+      message(r.students.length ? '' : 'Ask your teacher to add students to the spreadsheet.');
+    } catch (e) { message(e.message, true); }
+  }
+  function updatePinMode() {
+    const option = $('login-student').selectedOptions[0];
+    const selected = !!$('login-student').value;
+    const creating = selected && option.dataset.needsPin === '1';
+    $('pin-area').hidden = !selected;
+    $('confirm-area').hidden = !creating;
+    $('pin-label').textContent = creating ? 'Make a four-digit PIN' : 'Your four-digit PIN';
+    $('btn-login').textContent = creating ? 'Create my PIN →' : 'Let’s type →';
+    $('login-pin').value = '';
+    $('login-pin-confirm').value = '';
+    $('login-pin').disabled = !selected;
+    $('btn-login').disabled = !selected;
+    message(creating ? 'You’ll use this same PIN next time.' : '');
+    if (selected) $('login-pin').focus();
+  }
+  async function signIn() {
+    const studentId = $('login-student').value;
+    const pin = $('login-pin').value;
+    const option = $('login-student').selectedOptions[0];
+    const creating = option && option.dataset.needsPin === '1';
+    if (!studentId || !/^\d{4}$/.test(pin)) return message('Enter exactly four numbers.', true);
+    if (creating && pin !== $('login-pin-confirm').value) return message('Those two PINs do not match yet.', true);
+    $('btn-login').disabled = true;
+    message(creating ? 'Making your PIN…' : 'Opening Typer Kids…');
+    try {
+      const r = await call(creating ? 'createStudentPin' : 'login', studentId, pin);
+      if (!r.ok) throw new Error(r.error);
+      state.token = r.token;
+      state.student = r.student;
+      state.progress = r.progress;
+      state.version = Number(r.progress && r.progress.version || 0);
+      $('login-pin').value = '';
+      $('login-pin-confirm').value = '';
+      openApp();
+    } catch (e) {
+      message(e.message, true);
+      $('btn-login').disabled = false;
+    }
+  }
+  function openApp() {
+    $('student-name').textContent = state.student.name;
+    $('login-screen').hidden = true;
+    $('app-screen').hidden = false;
+    $('typer-frame').src = window.TYPER_KIDS_URL + '/?classroom=1';
+    startActivity();
+  }
+  function sendSession() {
+    const frame = $('typer-frame').contentWindow;
+    if (!frame) return;
+    frame.postMessage(JSON.stringify({type: 'classroom-session', student: state.student, progress: state.progress}), appOrigin);
+  }
+  function queueSave(snapshot) {
+    state.pendingSnapshot = snapshot;
+    $('save-status').textContent = 'Saving…';
+    clearTimeout(state.saveTimer);
+    state.saveTimer = setTimeout(flushSave, 500);
+  }
+  async function flushSave() {
+    clearTimeout(state.saveTimer);
+    if (!state.pendingSnapshot || !state.token) return;
+    if (state.saving) { state.saveAgain = true; return; }
+    state.saving = true;
+    const snapshot = state.pendingSnapshot;
+    state.pendingSnapshot = null;
+    const profile = Object.assign({}, state.progress && state.progress.profile || {}, {typerKids: snapshot});
+    try {
+      const r = await call('saveProgress', state.token, {saveId: uuid(), expectedVersion: state.version, profile});
+      if (r.conflict && r.progress) {
+        state.progress = r.progress;
+        state.version = Number(r.version || 0);
+        alert('Your progress changed in another tab. Typer Kids will reload the newest copy.');
+        $('typer-frame').src = window.TYPER_KIDS_URL + '/?classroom=1&reload=' + Date.now();
+      } else if (!r.ok) {
+        throw new Error(r.error || 'Progress was not saved.');
+      } else {
+        state.version = Number(r.version || state.version);
+        state.progress = {version: state.version, profile};
+        $('save-status').textContent = 'Saved';
+      }
+    } catch (_) {
+      state.pendingSnapshot = snapshot;
+      state.saveAgain = true;
+      $('save-status').textContent = 'Will retry';
+    } finally {
+      state.saving = false;
+      if (state.saveAgain) {
+        state.saveAgain = false;
+        state.saveTimer = setTimeout(flushSave, 2500);
+      }
+    }
+  }
+  function startActivity() {
+    state.sessionId = uuid(); state.startedAt = new Date().toISOString();
+    state.activeSeconds = 0; state.lastTick = performance.now(); state.lastKey = 0;
+    clearInterval(state.activityTimer);
+    state.activityTimer = setInterval(tick, 1000);
+    clearInterval(state.activitySaveTimer);
+    state.activitySaveTimer = setInterval(flushActivity, 60000);
+  }
+  function tick() {
+    const now = performance.now();
+    const delta = Math.min(2, Math.max(0, (now - state.lastTick) / 1000));
+    state.lastTick = now;
+    if (state.token && !document.hidden && state.lastKey && now - state.lastKey < 30000) state.activeSeconds += delta;
+  }
+  async function flushActivity() {
+    if (!state.token || !state.sessionId || state.activeSeconds < 1) return;
+    try {
+      await call('saveActivity', state.token, {
+        sessionId: state.sessionId,
+        activeSeconds: Math.floor(state.activeSeconds),
+        activity: state.activity,
+        startedAt: state.startedAt
+      });
+    } catch (_) {}
+  }
+  async function logout() {
+    await Promise.allSettled([flushSave(), flushActivity()]);
+    const token = state.token;
+    state.token = null; state.student = null; state.progress = null;
+    clearInterval(state.activityTimer); clearInterval(state.activitySaveTimer);
+    $('typer-frame').src = 'about:blank';
+    $('app-screen').hidden = true;
+    $('login-screen').hidden = false;
+    $('btn-login').disabled = false;
+    $('login-student').value = '';
+    $('pin-area').hidden = true;
+    message('');
+    if (token) call('logout', token).catch(() => {});
+  }
+  function escapeHtml(value) {
+    return String(value).replace(/[&<>'"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
+  }
+  window.addEventListener('message', event => {
+    if (event.origin !== appOrigin || typeof event.data !== 'string') return;
+    let data; try { data = JSON.parse(event.data); } catch (_) { return; }
+    if (data.type === 'typer-ready') sendSession();
+    if (data.type === 'typer-save') queueSave(data.snapshot || {});
+    if (data.type === 'typer-activity') state.lastKey = performance.now();
+    if (data.type === 'typer-context') state.activity = String(data.activity || 'Typer Kids').slice(0, 80);
+    if (data.type === 'typer-logout') logout();
+  });
+  $('login-student').addEventListener('change', updatePinMode);
+  $('btn-login').addEventListener('click', signIn);
+  $('btn-logout').addEventListener('click', logout);
+  [$('login-pin'), $('login-pin-confirm')].forEach(el => el.addEventListener('keydown', e => { if (e.key === 'Enter') signIn(); }));
+  window.addEventListener('online', () => { flushSave(); flushActivity(); });
+  window.addEventListener('pagehide', () => { flushSave(); flushActivity(); });
+  boot();
+})();
+</script>

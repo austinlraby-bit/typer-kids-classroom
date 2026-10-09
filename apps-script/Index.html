@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Typer Kids Classroom</title>
+  <meta name="theme-color" content="#fff7df">
+  <?!= include('Styles'); ?>
+</head>
+<body>
+  <main id="login-screen" class="login-screen">
+    <section class="login-card">
+      <div class="mascot" aria-hidden="true">🐵</div>
+      <p class="eyebrow">TYPER KIDS</p>
+      <h1>Who’s typing today?</h1>
+      <p class="intro">Choose your name, then use your four-digit PIN.</p>
+
+      <label for="login-student">Your name</label>
+      <select id="login-student" disabled>
+        <option>Loading your class…</option>
+      </select>
+
+      <div id="pin-area" hidden>
+        <label for="login-pin"><span id="pin-label">Your PIN</span></label>
+        <input id="login-pin" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="4" autocomplete="off" placeholder="••••" disabled>
+        <div id="confirm-area" hidden>
+          <label for="login-pin-confirm">Type it once more</label>
+          <input id="login-pin-confirm" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="4" autocomplete="off" placeholder="••••">
+          <p class="helper">Pick four numbers you can remember. This becomes your PIN.</p>
+        </div>
+        <button id="btn-login" disabled>Let’s type <span aria-hidden="true">→</span></button>
+      </div>
+      <p id="login-message" class="message" role="status" aria-live="polite"></p>
+    </section>
+  </main>
+
+  <section id="app-screen" class="app-screen" hidden>
+    <div id="app-toolbar" class="app-toolbar">
+      <span id="student-name"></span>
+      <span id="save-status" aria-live="polite"></span>
+      <button id="btn-logout">Log out</button>
+    </div>
+    <iframe id="typer-frame" title="Typer Kids" allow="autoplay"></iframe>
+  </section>
+
+  <script>window.TYPER_KIDS_URL = <?!= JSON.stringify(getTyperKidsUrl()) ?>;</script>
+  <?!= include('Classroom'); ?>
+</body>
+</html>

@@ -1,0 +1,188 @@
+import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
+
+import '../../data/lesson_curriculum_selector.dart';
+import '../../data/practice_generator.dart';
+import '../../models/lesson.dart';
+import '../../models/typing_stats.dart';
+import '../../providers/profile_provider.dart';
+import '../../providers/progress_provider.dart';
+import '../../screens/games/defend_temple_screen.dart';
+import '../../screens/games/falling_words_screen.dart';
+import '../../screens/games/game_menu_screen.dart';
+import '../../screens/games/key_critters_screen.dart';
+import '../../screens/games/speed_chase_screen.dart';
+import '../../screens/games/story_sprint_screen.dart';
+import '../../screens/games/word_bubbles_screen.dart';
+import '../../screens/home_screen.dart';
+import '../../screens/lesson_list_screen.dart';
+import '../../screens/profile_screen.dart';
+import '../../screens/results_screen.dart';
+import '../../screens/sandbox/sandbox_screen.dart';
+import '../../screens/settings_screen.dart';
+import '../../screens/test/typing_test_screen.dart';
+import '../../screens/typing_screen.dart';
+
+/// Centralized router configuration using go_router.
+///
+/// Routes:
+///   /profiles                  → Profile picker / manager
+///   /                          → Home
+///   /lessons                   → Lesson list
+///   /lesson/:lessonId          → Typing screen (intro + practice)
+///   /lesson/:lessonId/results  → Results / celebration screen
+///   /games                   → Game menu
+///   /games/falling-words      → Falling words game
+///   /sandbox                  → Free practice sandbox
+///   /test                     → Typing test
+///   /settings                  → Settings
+class AppRouter {
+  AppRouter._();
+
+  static final _rootNavigatorKey = GlobalKey<NavigatorState>();
+
+  /// Resolve a lesson ID to a lesson — either from the curriculum or, for
+  /// the special tricky-keys ID, generated from the profile's missed keys.
+  static Lesson? _resolveLesson(BuildContext context, String lessonId) {
+    final lesson = LessonCurriculum.byId(lessonId);
+    if (lesson != null) return lesson;
+    if (lessonId == PracticeGenerator.trickyKeysLessonId) {
+      return Provider.of<ProgressProvider>(
+        context,
+        listen: false,
+      ).trickyKeysLesson;
+    }
+    return null;
+  }
+
+  static GoRouter router(ProfileProvider profileProvider) => GoRouter(
+    navigatorKey: _rootNavigatorKey,
+    initialLocation: '/',
+    refreshListenable: profileProvider,
+    redirect: (context, state) {
+      final profileProv = Provider.of<ProfileProvider>(context, listen: false);
+      final hasActive = profileProv.hasActiveProfile;
+      final onProfilePage = state.matchedLocation == '/profiles';
+
+      if (profileProv.classroomManaged && onProfilePage) return '/';
+
+      // If no active profile and not already on profile page, redirect there
+      if (!hasActive && !onProfilePage) return '/profiles';
+      // If has active profile and on profile page, go home
+      // (only on initial nav, not user-initiated)
+      return null;
+    },
+    routes: [
+      GoRoute(
+        path: '/profiles',
+        name: 'profiles',
+        builder: (context, state) => const ProfileScreen(),
+      ),
+      GoRoute(
+        path: '/',
+        name: 'home',
+        builder: (context, state) => const HomeScreen(),
+      ),
+      GoRoute(
+        path: '/lessons',
+        name: 'lessons',
+        builder: (context, state) => const LessonListScreen(),
+      ),
+      GoRoute(
+        path: '/lesson/:lessonId',
+        name: 'lesson',
+        builder: (context, state) {
+          final lessonId = state.pathParameters['lessonId']!;
+          final lesson = _resolveLesson(context, lessonId);
+          if (lesson == null) {
+            // Invalid lesson ID — show home
+            return const HomeScreen();
+          }
+          return TypingScreen(lesson: lesson);
+        },
+        routes: [
+          GoRoute(
+            path: 'results',
+            name: 'results',
+            parentNavigatorKey: _rootNavigatorKey,
+            redirect: (context, state) {
+              final lessonId = state.pathParameters['lessonId'];
+              // If there is no lesson/stats payload (e.g. page refresh on
+              // web), redirect to the lesson so the user can play it again.
+              if (state.extra is (Lesson, TypingStats)) return null;
+              if (lessonId == null ||
+                  _resolveLesson(context, lessonId) == null) {
+                return '/';
+              }
+              return '/lesson/$lessonId';
+            },
+            builder: (context, state) {
+              final (lesson, stats) = state.extra as (Lesson, TypingStats);
+              return ResultsScreen(lesson: lesson, stats: stats);
+            },
+          ),
+        ],
+      ),
+      GoRoute(
+        path: '/settings',
+        name: 'settings',
+        builder: (context, state) => const SettingsScreen(),
+      ),
+      GoRoute(
+        path: '/games',
+        name: 'games',
+        builder: (context, state) => const GameMenuScreen(),
+        routes: [
+          GoRoute(
+            path: 'falling-words',
+            name: 'falling-words',
+            parentNavigatorKey: _rootNavigatorKey,
+            builder: (context, state) => const FallingWordsScreen(),
+          ),
+          GoRoute(
+            path: 'word-bubbles',
+            name: 'word-bubbles',
+            parentNavigatorKey: _rootNavigatorKey,
+            builder: (context, state) => const WordBubblesScreen(),
+          ),
+          GoRoute(
+            path: 'speed-chase',
+            name: 'speed-chase',
+            parentNavigatorKey: _rootNavigatorKey,
+            builder: (context, state) => const SpeedChaseScreen(),
+          ),
+          GoRoute(
+            path: 'defend-temple',
+            name: 'defend-temple',
+            parentNavigatorKey: _rootNavigatorKey,
+            builder: (context, state) => const DefendTempleScreen(),
+          ),
+          GoRoute(
+            path: 'key-critters',
+            name: 'key-critters',
+            parentNavigatorKey: _rootNavigatorKey,
+            builder: (context, state) => const KeyCrittersScreen(),
+          ),
+          GoRoute(
+            path: 'story-sprint',
+            name: 'story-sprint',
+            parentNavigatorKey: _rootNavigatorKey,
+            builder: (context, state) => const StorySprintScreen(),
+          ),
+        ],
+      ),
+      GoRoute(
+        path: '/sandbox',
+        name: 'sandbox',
+        builder: (context, state) => const SandboxScreen(),
+      ),
+      GoRoute(
+        path: '/test',
+        name: 'typing-test',
+        builder: (context, state) => const TypingTestScreen(),
+      ),
+    ],
+    errorBuilder: (context, state) => const HomeScreen(),
+  );
+}
