@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -326,5 +328,114 @@ class PagodaPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant PagodaPainter old) =>
+      damageFlash != old.damageFlash;
+}
+
+/// Bright flower garden used by Garden Guard. The existing game mechanics
+/// still treat this as the protected base, but the visual avoids weapons and
+/// frightening imagery.
+class GardenPainter extends CustomPainter {
+  final bool damageFlash;
+
+  GardenPainter({this.damageFlash = false});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final w = size.width;
+    final h = size.height;
+    final ground = damageFlash
+        ? const Color(0xFF8C6A3D)
+        : const Color(0xFF4F9B58);
+
+    canvas.drawRect(
+      Rect.fromLTWH(0, h * 0.48, w, h * 0.52),
+      Paint()..color = ground,
+    );
+
+    // Rolling garden bed.
+    final hill = Path()
+      ..moveTo(0, h * 0.62)
+      ..quadraticBezierTo(w * 0.25, h * 0.38, w * 0.5, h * 0.58)
+      ..quadraticBezierTo(w * 0.75, h * 0.35, w, h * 0.58)
+      ..lineTo(w, h)
+      ..lineTo(0, h)
+      ..close();
+    canvas.drawPath(
+      hill,
+      Paint()
+        ..color = damageFlash
+            ? const Color(0xFF9E7950)
+            : const Color(0xFF72C96F),
+    );
+
+    // Friendly white fence establishes a clear goal line.
+    final fencePaint = Paint()
+      ..color = const Color(0xFFFFF4D6)
+      ..strokeWidth = 4
+      ..strokeCap = StrokeCap.round;
+    canvas.drawLine(Offset(0, h * 0.57), Offset(w, h * 0.57), fencePaint);
+    canvas.drawLine(Offset(0, h * 0.72), Offset(w, h * 0.72), fencePaint);
+    for (var x = 8.0; x < w; x += 24) {
+      canvas.drawLine(Offset(x, h * 0.47), Offset(x, h * 0.82), fencePaint);
+    }
+
+    const flowerColors = [
+      Color(0xFFFFD54F),
+      Color(0xFFFF8A80),
+      Color(0xFFCE93D8),
+      Color(0xFF81D4FA),
+      Color(0xFFFFAB91),
+    ];
+    for (var i = 0; i < 15; i++) {
+      final x = 18.0 + i * (w - 36) / 14;
+      final y = h * (0.68 + (i % 3) * 0.08);
+      final stemTop = y - 14;
+      canvas.drawLine(
+        Offset(x, y + 8),
+        Offset(x, stemTop),
+        Paint()
+          ..color = const Color(0xFF2F7D45)
+          ..strokeWidth = 2,
+      );
+      final petal = Paint()
+        ..color = damageFlash
+            ? const Color(0xFFB99A72)
+            : flowerColors[i % flowerColors.length];
+      for (var p = 0; p < 6; p++) {
+        final angle = p * 1.047;
+        canvas.drawCircle(
+          Offset(x + 6 * math.cos(angle), stemTop + 6 * math.sin(angle)),
+          4,
+          petal,
+        );
+      }
+      canvas.drawCircle(
+        Offset(x, stemTop),
+        3.5,
+        Paint()..color = const Color(0xFF6D4C41),
+      );
+    }
+
+    // Central sunflower sign.
+    final center = Offset(w / 2, h * 0.42);
+    for (var p = 0; p < 10; p++) {
+      final angle = p * 0.628;
+      canvas.drawOval(
+        Rect.fromCenter(
+          center: Offset(
+            center.dx + 15 * math.cos(angle),
+            center.dy + 15 * math.sin(angle),
+          ),
+          width: 12,
+          height: 20,
+        ),
+        Paint()..color = const Color(0xFFFFCA28),
+      );
+    }
+    canvas.drawCircle(center, 12, Paint()..color = const Color(0xFF795548));
+  }
+
+  @override
+  bool shouldRepaint(covariant GardenPainter old) =>
       damageFlash != old.damageFlash;
 }

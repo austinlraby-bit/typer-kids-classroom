@@ -424,9 +424,6 @@ class _TypingScreenState extends State<TypingScreen> {
                       ),
                       child: _buildLiveStats(),
                     ),
-                    // Finger guide (compact on short screens)
-                    if (!isShort)
-                      FingerGuide(currentKey: _typingProvider.currentChar),
                     SizedBox(height: isShort ? 2 : 8),
                     // Text to type — takes available remaining space
                     Expanded(
@@ -450,6 +447,10 @@ class _TypingScreenState extends State<TypingScreen> {
                         padding: const EdgeInsets.only(bottom: 4),
                         child: _buildFocusPrompt(),
                       ),
+                    // Keep the hand cue visually attached to the keyboard,
+                    // like established typing tutors do.
+                    if (!isShort)
+                      FingerGuide(currentKey: _typingProvider.currentChar),
                     // Virtual keyboard — pinned to bottom
                     Padding(
                       padding: EdgeInsets.only(

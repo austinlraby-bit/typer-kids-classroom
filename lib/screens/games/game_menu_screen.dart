@@ -74,9 +74,10 @@ class _GameMenuScreenState extends State<GameMenuScreen> {
 
               final gameCards = <Widget>[
                 _GameCard(
-                  emoji: '🏯',
-                  title: 'Defend the Temple',
-                  description: 'Stop the demons before they reach your temple!',
+                  emoji: '🌻',
+                  title: 'Garden Guard',
+                  description:
+                      'Clear the storm clouds before they reach the garden!',
                   shortcut: '1',
                   color: const Color(0xFF8B0000),
                   compact: !isTall,

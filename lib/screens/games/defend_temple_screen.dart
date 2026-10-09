@@ -421,8 +421,8 @@ class _DefendTempleScreenState extends State<DefendTempleScreen>
       context: context,
       barrierDismissible: false,
       builder: (ctx) => QuitDialog(
-        title: 'Abandon Temple?',
-        message: 'The demons will overrun the temple if you leave!',
+        title: 'Leave the Garden?',
+        message: 'Your current Garden Guard round will end.',
         stayLabel: 'Stay & Fight',
         quitLabel: 'Retreat',
         stayBadge: 'Esc',
@@ -538,7 +538,7 @@ class _DefendTempleScreenState extends State<DefendTempleScreen>
           ),
           const SizedBox(width: 16),
           // Temple health bar
-          const Text('🏯', style: TextStyle(fontSize: 16)),
+          const Text('🌻', style: TextStyle(fontSize: 16)),
           const SizedBox(width: 6),
           Expanded(
             child: Container(
@@ -646,7 +646,7 @@ class _DefendTempleScreenState extends State<DefendTempleScreen>
               if (_demons.isEmpty && _ghosts.isEmpty)
                 Center(
                   child: Text(
-                    'Demons approaching...',
+                    'Clouds gathering...',
                     style: GoogleFonts.fredoka(
                       fontSize: 24,
                       color: Colors.white24,
@@ -793,7 +793,7 @@ class _DefendTempleScreenState extends State<DefendTempleScreen>
       ),
       child: CustomPaint(
         size: Size(double.infinity, height),
-        painter: PagodaPainter(damageFlash: _templeDamageFlash),
+        painter: GardenPainter(damageFlash: _templeDamageFlash),
       ),
     );
   }
@@ -884,9 +884,9 @@ class _DefendTempleScreenState extends State<DefendTempleScreen>
                   ),
           ),
           const SizedBox(height: 2),
-          // Demon emoji (below the word)
+          // Friendly storm cloud (below the word)
           Text(
-            '👹',
+            const ['🌧️', '🌩️', '🌫️'][demon.colorIndex % 3],
             style: TextStyle(
               fontSize: fontSize * 2.5,
               shadows: [
@@ -903,14 +903,9 @@ class _DefendTempleScreenState extends State<DefendTempleScreen>
     final startX = areaW / 2;
     final startY = areaH * (1.0 - _templeHeightFrac * 0.3);
     final endX = t.targetX * areaW;
-    // Offset down to hit the demon emoji (below the word label)
+    // Offset down to meet the cloud below the word label.
     final demonOffset = _wordFontSize * 2.2;
     final endY = t.targetY * areaH + demonOffset;
-
-    // Angle from start to end so the trishul points at the demon
-    final dx = endX - startX;
-    final dy = endY - startY;
-    final angle = atan2(dy, dx) + pi / 2; // +90 deg because 🔱 points up
 
     return TweenAnimationBuilder<double>(
       tween: Tween(begin: 0.0, end: 1.0),
@@ -925,10 +920,7 @@ class _DefendTempleScreenState extends State<DefendTempleScreen>
           top: cy - 18,
           child: Opacity(
             opacity: p < 0.85 ? 1.0 : ((1.0 - p) / 0.15).clamp(0.0, 1.0),
-            child: Transform.rotate(
-              angle: angle,
-              child: const Text('🔱', style: TextStyle(fontSize: 36)),
-            ),
+            child: const Text('✨', style: TextStyle(fontSize: 36)),
           ),
         );
       },
@@ -996,7 +988,7 @@ class _DefendTempleScreenState extends State<DefendTempleScreen>
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              ghost.success ? '💥' : '💀',
+              ghost.success ? '☀️' : '💧',
               style: TextStyle(fontSize: fontSize * 0.9),
             ),
             const SizedBox(width: 4),
@@ -1070,12 +1062,12 @@ class _DefendTempleScreenState extends State<DefendTempleScreen>
           Expanded(
             child: Text(
               _flash == _FlashType.correct
-                  ? '💥 Slain!'
+                  ? '☀️ Cleared!'
                   : _flash == _FlashType.wrong
                   ? '✗ No match'
                   : hasInput
                   ? _input
-                  : 'Type to attack...',
+                  : 'Type to clear a cloud...',
               style: GoogleFonts.fredoka(
                 fontSize: fontSize,
                 fontWeight: FontWeight.w500,
