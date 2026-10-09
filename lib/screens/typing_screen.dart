@@ -27,11 +27,16 @@ class TypingScreen extends StatefulWidget {
 }
 
 class _TypingScreenState extends State<TypingScreen> {
+  static const _homeRowCheck = 'asdfjkl;';
+
   late TypingProvider _typingProvider;
   final FocusNode _focusNode = FocusNode();
   final FocusNode _introFocusNode = FocusNode();
   final _sfx = SoundManager();
   bool _showIntro = true;
+  bool _showHomeRowCheck = true;
+  int _homeRowPosition = 0;
+  bool _homeRowMistake = false;
   bool _isTransitioning = false;
 
   @override
@@ -63,7 +68,12 @@ class _TypingScreenState extends State<TypingScreen> {
   }
 
   void _startLesson() {
-    setState(() => _showIntro = false);
+    setState(() {
+      _showIntro = false;
+      _showHomeRowCheck = true;
+      _homeRowPosition = 0;
+      _homeRowMistake = false;
+    });
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _focusNode.requestFocus();
     });
@@ -81,14 +91,20 @@ class _TypingScreenState extends State<TypingScreen> {
 
   void _handleKeyEvent(KeyEvent event) {
     if (event is! KeyDownEvent) return;
-    if (_typingProvider.isFinished) return;
-    if (_typingProvider.isPaused) return;
-    if (_isTransitioning) return; // Ignore input during exercise transition
 
     if (event.logicalKey == LogicalKeyboardKey.escape) {
       _showQuitDialog();
       return;
     }
+
+    if (_showHomeRowCheck) {
+      _handleHomeRowKey(event);
+      return;
+    }
+
+    if (_typingProvider.isFinished) return;
+    if (_typingProvider.isPaused) return;
+    if (_isTransitioning) return; // Ignore input during exercise transition
 
     final key = event.character;
     if (key != null && key.isNotEmpty) {
@@ -102,10 +118,16 @@ class _TypingScreenState extends State<TypingScreen> {
       // If exercise complete but not last, auto advance after a brief moment
       if (_typingProvider.isExerciseComplete && !_typingProvider.isFinished) {
         _isTransitioning = true;
+        _typingProvider.pause();
         Future.delayed(const Duration(milliseconds: 500), () {
           if (mounted) {
             _typingProvider.nextExercise();
-            _isTransitioning = false;
+            setState(() {
+              _showHomeRowCheck = true;
+              _homeRowPosition = 0;
+              _homeRowMistake = false;
+              _isTransitioning = false;
+            });
           }
         });
       }
@@ -114,6 +136,38 @@ class _TypingScreenState extends State<TypingScreen> {
       if (_typingProvider.isFinished) {
         _navigateToResults();
       }
+    }
+  }
+
+  void _handleHomeRowKey(KeyEvent event) {
+    final typed = event.character?.toLowerCase();
+    if (typed == null || typed.isEmpty) return;
+
+    final expected = _homeRowCheck[_homeRowPosition];
+    if (typed != expected) {
+      setState(() => _homeRowMistake = true);
+      _sfx.playIncorrect();
+      return;
+    }
+
+    _sfx.playKeystroke();
+    final nextPosition = _homeRowPosition + 1;
+    if (nextPosition == _homeRowCheck.length) {
+      setState(() {
+        _homeRowPosition = nextPosition;
+        _homeRowMistake = false;
+      });
+      Future.delayed(const Duration(milliseconds: 350), () {
+        if (!mounted) return;
+        setState(() => _showHomeRowCheck = false);
+        _typingProvider.resume();
+        _focusNode.requestFocus();
+      });
+    } else {
+      setState(() {
+        _homeRowPosition = nextPosition;
+        _homeRowMistake = false;
+      });
     }
   }
 
@@ -360,6 +414,8 @@ class _TypingScreenState extends State<TypingScreen> {
   }
 
   Widget _buildTypingScreen() {
+    if (_showHomeRowCheck) return _buildHomeRowCheckScreen();
+
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
@@ -473,6 +529,167 @@ class _TypingScreenState extends State<TypingScreen> {
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildHomeRowCheckScreen() {
+    final isComplete = _homeRowPosition >= _homeRowCheck.length;
+    final currentKey = isComplete ? null : _homeRowCheck[_homeRowPosition];
+    final completedKeys = _homeRowCheck
+        .substring(0, _homeRowPosition.clamp(0, _homeRowCheck.length))
+        .split('')
+        .toSet();
+
+    return Scaffold(
+      backgroundColor: AppColors.background,
+      appBar: AppBar(
+        title: const Text('Home-Row Check'),
+        leading: IconButton(
+          icon: const Icon(Icons.close_rounded),
+          onPressed: () => _showQuitDialog(),
+        ),
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 16),
+            child: Center(
+              child: Text(
+                'Exercise ${_typingProvider.currentExerciseIndex + 1}',
+                style: GoogleFonts.fredoka(fontSize: 17, color: Colors.white),
+              ),
+            ),
+          ),
+        ],
+      ),
+      body: KeyboardListener(
+        focusNode: _focusNode,
+        autofocus: true,
+        onKeyEvent: _handleKeyEvent,
+        child: GestureDetector(
+          onTap: () => _focusNode.requestFocus(),
+          child: SafeArea(
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final horizontalPad = constraints.maxWidth > 800 ? 32.0 : 16.0;
+                final availableWidth = constraints.maxWidth - horizontalPad * 2;
+                final keySize = (availableWidth / 15).clamp(28.0, 64.0);
+
+                return Column(
+                  children: [
+                    Expanded(
+                      child: Center(
+                        child: SingleChildScrollView(
+                          padding: const EdgeInsets.symmetric(horizontal: 20),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                isComplete ? 'Ready to type!' : 'Find home row',
+                                style: GoogleFonts.fredoka(
+                                  fontSize: 32,
+                                  fontWeight: FontWeight.w700,
+                                  color: isComplete
+                                      ? AppColors.correct
+                                      : AppColors.textPrimary,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                isComplete
+                                    ? 'Great finger placement!'
+                                    : 'Rest your fingers on A S D F   J K L ;\nThen press each highlighted key.',
+                                textAlign: TextAlign.center,
+                                style: GoogleFonts.nunito(
+                                  fontSize: 18,
+                                  color: AppColors.textSecondary,
+                                ),
+                              ),
+                              const SizedBox(height: 18),
+                              _buildHomeRowProgress(),
+                              const SizedBox(height: 8),
+                              AnimatedSwitcher(
+                                duration: const Duration(milliseconds: 150),
+                                child: _homeRowMistake
+                                    ? Text(
+                                        'Keep your fingers planted—press the highlighted key.',
+                                        key: const ValueKey('mistake'),
+                                        style: GoogleFonts.nunito(
+                                          fontSize: 15,
+                                          fontWeight: FontWeight.w700,
+                                          color: AppColors.incorrect,
+                                        ),
+                                      )
+                                    : const SizedBox(height: 22),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                    if (currentKey != null) FingerGuide(currentKey: currentKey),
+                    Padding(
+                      padding: EdgeInsets.only(
+                        left: horizontalPad,
+                        right: horizontalPad,
+                        bottom: 12,
+                      ),
+                      child: Center(
+                        child: KeyboardWidget(
+                          activeKey: currentKey,
+                          correctKeys: completedKeys,
+                          showFingerColors: true,
+                          keySize: keySize,
+                        ),
+                      ),
+                    ),
+                  ],
+                );
+              },
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHomeRowProgress() {
+    return Wrap(
+      spacing: 7,
+      alignment: WrapAlignment.center,
+      children: List.generate(_homeRowCheck.length, (index) {
+        final done = index < _homeRowPosition;
+        final active = index == _homeRowPosition;
+        return AnimatedContainer(
+          duration: const Duration(milliseconds: 150),
+          width: 46,
+          height: 46,
+          decoration: BoxDecoration(
+            color: done
+                ? AppColors.correct
+                : active
+                ? AppColors.secondary
+                : Colors.white,
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(
+              color: done
+                  ? AppColors.correct
+                  : active
+                  ? AppColors.secondary
+                  : Colors.grey.shade300,
+              width: active ? 3 : 1.5,
+            ),
+          ),
+          child: Center(
+            child: Text(
+              done ? '✓' : _homeRowCheck[index].toUpperCase(),
+              style: GoogleFonts.robotoMono(
+                fontSize: done ? 22 : 20,
+                fontWeight: FontWeight.w700,
+                color: done || active ? Colors.white : AppColors.textSecondary,
+              ),
+            ),
+          ),
+        );
+      }),
     );
   }
 
