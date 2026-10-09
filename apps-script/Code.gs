@@ -34,6 +34,10 @@ function setTyperKidsUrl(url) {
   return url;
 }
 
+function configureTyperKidsUrl() {
+  return setTyperKidsUrl('https://austinlraby-bit.github.io/typer-kids-classroom');
+}
+
 function include(filename) {
   return HtmlService.createHtmlOutputFromFile(filename).getContent();
 }
