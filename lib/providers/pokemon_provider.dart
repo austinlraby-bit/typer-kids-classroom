@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import '../classroom/classroom_bridge.dart';
 import '../data/pokemon_catalog.dart';
@@ -23,6 +25,7 @@ class PokemonProvider extends ChangeNotifier {
   List<PokemonSpecies> catalog = const [];
   bool busy = false;
   String? error;
+  final Set<String> _pendingClaims = {};
 
   Future<void> load() async {
     catalog = await PokemonCatalog.load();
@@ -56,7 +59,20 @@ class PokemonProvider extends ChangeNotifier {
     );
     busy = false;
     if (r['ok'] != true) {
-      error = '${r['error'] ?? 'Could not start the encounter.'}';
+      final message = '${r['error'] ?? 'Could not start the encounter.'}';
+      if (_isTemporaryClaimError(message)) {
+        error = null;
+        unawaited(
+          _retryClaimQuietly(
+            source: source,
+            eventId: eventId,
+            lessonId: lessonId,
+            unit: unit,
+          ),
+        );
+      } else {
+        error = message;
+      }
       notifyListeners();
       return null;
     }
@@ -64,6 +80,44 @@ class PokemonProvider extends ChangeNotifier {
     final id = (r['caughtId'] as num?)?.toInt();
     notifyListeners();
     return id == null ? null : byId(id);
+  }
+
+  bool _isTemporaryClaimError(String message) {
+    final lower = message.toLowerCase();
+    return lower.contains('busy') ||
+        lower.contains('timed out') ||
+        lower.contains('connection');
+  }
+
+  Future<void> _retryClaimQuietly({
+    required String source,
+    required String eventId,
+    String? lessonId,
+    int? unit,
+  }) async {
+    if (!_pendingClaims.add(eventId)) return;
+    try {
+      for (var attempt = 0; attempt < 8; attempt++) {
+        await Future<void>.delayed(
+          Duration(seconds: (2 + attempt).clamp(2, 8)),
+        );
+        final result = await ClassroomBridge.instance.claimPokemon(
+          source: source,
+          eventId: eventId,
+          lessonId: lessonId,
+          unit: unit,
+        );
+        if (result['ok'] == true) {
+          _apply((result['pokemon'] as Map?)?.cast<String, dynamic>() ?? {});
+          notifyListeners();
+          return;
+        }
+        final message = '${result['error'] ?? ''}';
+        if (!_isTemporaryClaimError(message)) return;
+      }
+    } finally {
+      _pendingClaims.remove(eventId);
+    }
   }
 
   Future<void> selectRegion(int value) async {
