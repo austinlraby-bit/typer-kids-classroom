@@ -34,7 +34,7 @@ class _TypingScreenState extends State<TypingScreen> {
   final FocusNode _introFocusNode = FocusNode();
   final _sfx = SoundManager();
   bool _showIntro = true;
-  bool _showHomeRowCheck = true;
+  bool _showHomeRowCheck = false;
   int _homeRowPosition = 0;
   bool _homeRowMistake = false;
   bool _isTransitioning = false;
@@ -70,7 +70,7 @@ class _TypingScreenState extends State<TypingScreen> {
   void _startLesson() {
     setState(() {
       _showIntro = false;
-      _showHomeRowCheck = true;
+      _showHomeRowCheck = false;
       _homeRowPosition = 0;
       _homeRowMistake = false;
     });
@@ -123,7 +123,7 @@ class _TypingScreenState extends State<TypingScreen> {
           if (mounted) {
             _typingProvider.nextExercise();
             setState(() {
-              _showHomeRowCheck = true;
+              _showHomeRowCheck = false;
               _homeRowPosition = 0;
               _homeRowMistake = false;
               _isTransitioning = false;

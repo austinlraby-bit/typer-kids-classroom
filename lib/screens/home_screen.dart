@@ -134,6 +134,8 @@ class _HomeScreenState extends State<HomeScreen> {
                         _buildHeader(context),
                         const SizedBox(height: 24),
                         _buildMascotGreeting(progress),
+                        const SizedBox(height: 16),
+                        _buildRegionSwitcher(context, progress),
                         const SizedBox(height: 28),
                         _buildContinueButton(context, progress),
                         const SizedBox(height: 12),
@@ -243,6 +245,111 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
           ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRegionSwitcher(BuildContext context, ProgressProvider progress) {
+    const regions = [
+      'Kanto',
+      'Johto',
+      'Hoenn',
+      'Sinnoh',
+      'Unova',
+      'Kalos',
+      'Alola',
+      'Galar',
+      'Paldea',
+    ];
+    final pokemon = context.watch<PokemonProvider>();
+    final unlocked = pokemon.unlockedRegions(progress.completedLessons);
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(16, 14, 16, 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: AppColors.primary.withValues(alpha: 0.25)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.public_rounded, color: AppColors.primary),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  'Choose your adventure region',
+                  style: GoogleFonts.fredoka(
+                    fontSize: 19,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+              ),
+              Text(
+                'Encounters: ${regions[pokemon.selectedRegion]}',
+                style: GoogleFonts.nunito(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.primary,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'New Pokémon you meet will come from this region.',
+            style: GoogleFonts.nunito(
+              fontSize: 14,
+              color: AppColors.textSecondary,
+            ),
+          ),
+          const SizedBox(height: 10),
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: List.generate(regions.length, (i) {
+                final available = i < unlocked;
+                return Padding(
+                  padding: const EdgeInsets.only(right: 8),
+                  child: ChoiceChip(
+                    avatar: available
+                        ? null
+                        : const Icon(Icons.lock_rounded, size: 15),
+                    label: Text(regions[i]),
+                    selected: pokemon.selectedRegion == i,
+                    onSelected: available && !pokemon.busy
+                        ? (selected) {
+                            if (selected) pokemon.selectRegion(i);
+                          }
+                        : null,
+                  ),
+                );
+              }),
+            ),
+          ),
+          if (unlocked < regions.length)
+            Padding(
+              padding: const EdgeInsets.only(top: 6),
+              child: Text(
+                'Next region unlocks after ${pokemon.thresholds[unlocked]} completed lessons.',
+                style: GoogleFonts.nunito(
+                  fontSize: 12,
+                  color: AppColors.textSecondary,
+                ),
+              ),
+            ),
         ],
       ),
     );
