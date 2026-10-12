@@ -95,7 +95,7 @@ function claimPokemon(token, request) {
     const source = String(request.source || '');
     const eventId = validateId_(request.eventId, 'reward');
     const lock = LockService.getScriptLock();
-    if (!lock.tryLock(3000)) throw new Error('The classroom is busy. Your lesson progress is safe—try this lesson once more to reveal the encounter.');
+    if (!lock.tryLock(3000)) throw new Error('Classroom busy—try this lesson once more.');
     try {
       const state = loadPokemonState_(auth.studentId);
       const priorTransaction = findPokemonTransaction_(state.transactions, eventId);
