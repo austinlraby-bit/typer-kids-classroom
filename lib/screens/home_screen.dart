@@ -264,6 +264,15 @@ class _HomeScreenState extends State<HomeScreen> {
     ];
     final pokemon = context.watch<PokemonProvider>();
     final unlocked = pokemon.unlockedRegions(progress.completedLessons);
+    final selectedRegion = pokemon.selectedRegion.clamp(0, regions.length - 1);
+    final regionPokemon = pokemon.catalog
+        .where((species) => species.generation == selectedRegion + 1)
+        .toList();
+    final regionCaught = regionPokemon
+        .where((species) => pokemon.caught.containsKey(species.id))
+        .length;
+    final regionComplete =
+        regionPokemon.isNotEmpty && regionCaught == regionPokemon.length;
 
     return Container(
       width: double.infinity,
@@ -283,22 +292,29 @@ class _HomeScreenState extends State<HomeScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
+          Wrap(
+            alignment: WrapAlignment.spaceBetween,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            spacing: 18,
+            runSpacing: 6,
             children: [
-              const Icon(Icons.public_rounded, color: AppColors.primary),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  'Choose your adventure region',
-                  style: GoogleFonts.fredoka(
-                    fontSize: 19,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.textPrimary,
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.public_rounded, color: AppColors.primary),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Choose your adventure region',
+                    style: GoogleFonts.fredoka(
+                      fontSize: 19,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.textPrimary,
+                    ),
                   ),
-                ),
+                ],
               ),
               Text(
-                'Encounters: ${regions[pokemon.selectedRegion]}',
+                '${regions[selectedRegion]} • $regionCaught/${regionPokemon.length} caught',
                 style: GoogleFonts.nunito(
                   fontSize: 13,
                   fontWeight: FontWeight.w700,
@@ -316,30 +332,41 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
           const SizedBox(height: 10),
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
-              children: List.generate(regions.length, (i) {
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: List.generate(
+              unlocked < regions.length ? unlocked + 1 : unlocked,
+              (i) {
                 final available = i < unlocked;
-                return Padding(
-                  padding: const EdgeInsets.only(right: 8),
-                  child: ChoiceChip(
-                    avatar: available
-                        ? null
-                        : const Icon(Icons.lock_rounded, size: 15),
-                    label: Text(regions[i]),
-                    selected: pokemon.selectedRegion == i,
-                    onSelected: available && !pokemon.busy
-                        ? (selected) {
-                            if (selected) pokemon.selectRegion(i);
-                          }
-                        : null,
-                  ),
+                return ChoiceChip(
+                  avatar: available
+                      ? null
+                      : const Icon(Icons.lock_rounded, size: 15),
+                  label: Text(available ? regions[i] : 'Next: ${regions[i]}'),
+                  selected: pokemon.selectedRegion == i,
+                  onSelected: available && !pokemon.busy
+                      ? (selected) {
+                          if (selected) pokemon.selectRegion(i);
+                        }
+                      : null,
                 );
-              }),
+              },
             ),
           ),
-          if (unlocked < regions.length)
+          if (regionComplete)
+            Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: Text(
+                '🏆 ${regions[selectedRegion]} is complete! Choose another unlocked region for new encounters.',
+                style: GoogleFonts.nunito(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.correct,
+                ),
+              ),
+            )
+          else if (unlocked < regions.length)
             Padding(
               padding: const EdgeInsets.only(top: 6),
               child: Text(

@@ -83,7 +83,15 @@ function claimPokemon(token, request) {
       const unlocked = unlockedRegionCount_(completed.length);
       state.selectedRegion = Math.max(0, Math.min(unlocked - 1, Number(state.selectedRegion) || 0));
       const pokemonId = choosePokemon_(state, special, eventId);
-      if (!pokemonId) throw new Error('This region is complete. Choose another unlocked region.');
+      if (!pokemonId) {
+        const range = POKEMON_RANGES_[state.selectedRegion] || POKEMON_RANGES_[0];
+        const uncaught = [];
+        for (let id=range[0]; id<=range[1]; id++) if (!state.caught[String(id)]) uncaught.push(id);
+        if (uncaught.length) {
+          throw new Error('You found every regular Pokémon in this region! Switch to another unlocked region. Its remaining special Pokémon appear during milestone encounters.');
+        }
+        throw new Error('This region is complete! Choose another unlocked region for your next encounter.');
+      }
       state.caught[String(pokemonId)] = Math.floor(Date.now() / 1000);
       if (!state.companionId) state.companionId = pokemonId;
       state.transactions.push(eventId);
@@ -118,10 +126,15 @@ function choosePokemon_(state, special, seed) {
   const range = POKEMON_RANGES_[state.selectedRegion] || POKEMON_RANGES_[0];
   let ids = [];
   for (let id=range[0]; id<=range[1]; id++) {
-    if (!state.caught[String(id)] && (special || POKEMON_SPECIAL_.indexOf(id) === -1)) ids.push(id);
+    const isSpecial = POKEMON_SPECIAL_.indexOf(id) !== -1;
+    if (!state.caught[String(id)] && (special ? isSpecial : !isSpecial)) ids.push(id);
   }
-  if (!ids.length && !special) {
-    for (let id=range[0]; id<=range[1]; id++) if (!state.caught[String(id)]) ids.push(id);
+  // If a milestone's special pool is already exhausted, keep the earned
+  // reward useful by selecting an uncaught regular Pokémon instead.
+  if (!ids.length && special) {
+    for (let id=range[0]; id<=range[1]; id++) {
+      if (!state.caught[String(id)] && POKEMON_SPECIAL_.indexOf(id) === -1) ids.push(id);
+    }
   }
   if (!ids.length) return 0;
   const hash = digest_(state.studentId + ':' + seed);
