@@ -77,7 +77,9 @@ function claimPokemon(token, request) {
     const lock = LockService.getScriptLock(); lock.waitLock(KQ.LOCK_WAIT_MS);
     try {
       const state = loadPokemonState_(auth.studentId);
-      if (state.transactions.indexOf(eventId) !== -1) return {ok:true, duplicate:true, pokemon:state};
+      const priorTransaction = findPokemonTransaction_(state.transactions, eventId);
+      if (priorTransaction.found) return {ok:true, duplicate:true,
+        caughtId:priorTransaction.pokemonId || null, pokemon:state};
       const progress = loadProgress_(auth.studentId, auth.name);
       const completed = completedLessonIds_(progress);
       let special = false;
@@ -85,7 +87,6 @@ function claimPokemon(token, request) {
         const lessonId = String(request.lessonId || '');
         if (completed.indexOf(lessonId) === -1 || eventId !== 'lesson_' + safeEventPart_(lessonId)) throw new Error('Finish this lesson successfully before catching a Pokémon.');
         const lessonRow = progress.profile.typerKids && progress.profile.typerKids.progress && progress.profile.typerKids.progress[lessonId];
-        state.accuracyRecords[lessonId] = Math.floor(Number(lessonRow && lessonRow.a) || 0);
       } else if (source === 'practice') {
         if (state.unclaimedEncounters < 1) throw new Error('Keep practicing to earn your next encounter.');
         state.unclaimedEncounters--;
@@ -116,11 +117,21 @@ function claimPokemon(token, request) {
       }
       state.caught[String(pokemonId)] = Math.floor(Date.now() / 1000);
       if (!state.companionId) state.companionId = pokemonId;
-      state.transactions.push(eventId);
+      state.transactions.push({id:eventId, pokemonId:pokemonId});
       savePokemonState_(state);
       return {ok:true, caughtId:pokemonId, pokemon:state};
     } finally { lock.releaseLock(); }
   } catch (err) { return {ok:false, error:publicError_(err)}; }
+}
+
+function findPokemonTransaction_(transactions, eventId) {
+  transactions = transactions || [];
+  for (let i=transactions.length-1; i>=0; i--) {
+    const item = transactions[i];
+    if (item === eventId) return {found:true, pokemonId:0};
+    if (item && item.id === eventId) return {found:true, pokemonId:Number(item.pokemonId) || 0};
+  }
+  return {found:false, pokemonId:0};
 }
 
 function updatePokemonPreferences(token, request) {

@@ -73,42 +73,72 @@ class _ResultsScreenState extends State<ResultsScreen>
 
   Future<void> _claimRewards() async {
     if (_passed != true || !mounted) return;
-    setState(() => _checkingRewards = true);
-    _encounterController.repeat();
     final provider = context.read<PokemonProvider>();
     final completed = context.read<ProgressProvider>().completedLessons;
     final lessonPart = widget.lesson.id.replaceAll(
       RegExp(r'[^A-Za-z0-9_-]'),
       '_',
     );
-    final lessonCatch = await provider.claim(
-      source: 'lesson',
-      eventId: 'lesson_$lessonPart',
-      lessonId: widget.lesson.id,
-    );
-    if (lessonCatch != null) _caught.add(lessonCatch);
-    if (completed > 0 && completed % 10 == 0) {
-      final unit = completed ~/ 10;
-      final unitCatch = await provider.claim(
-        source: 'unit',
-        eventId: 'unit_reward_$unit',
-        unit: unit,
-      );
-      if (unitCatch != null) _caught.add(unitCatch);
-    }
+    final lessonEvent = 'lesson_$lessonPart';
+    final unit = completed > 0 && completed % 10 == 0 ? completed ~/ 10 : 0;
+    final unitEvent = 'unit_reward_$unit';
     final band = widget.stats.accuracy.floor() ~/ 3;
-    final accuracyCatch = await provider.claim(
-      source: 'accuracy',
-      eventId: 'accuracy_${lessonPart}_$band',
-      lessonId: widget.lesson.id,
-    );
-    if (accuracyCatch != null) _caught.add(accuracyCatch);
+    final accuracyEvent = 'accuracy_${lessonPart}_$band';
+    final priorAccuracy = provider.accuracyRecords[widget.lesson.id] ?? 0;
+    final wantsLesson = !provider.claimedRewards.contains(lessonEvent);
+    final wantsUnit = unit > 0 && !provider.claimedRewards.contains(unitEvent);
+    final wantsAccuracy =
+        widget.stats.accuracy.floor() >= 80 &&
+        widget.stats.accuracy.floor() >= priorAccuracy + 3 &&
+        !provider.claimedRewards.contains(accuracyEvent);
+    if (!wantsLesson && !wantsUnit && !wantsAccuracy) return;
+
+    setState(() => _checkingRewards = true);
+    _encounterController.repeat();
+    try {
+      if (wantsLesson) {
+        final lessonCatch = await provider.claim(
+          source: 'lesson',
+          eventId: lessonEvent,
+          lessonId: widget.lesson.id,
+        );
+        if (lessonCatch != null) _caught.add(lessonCatch);
+      }
+      if (wantsUnit) {
+        final unitCatch = await provider.claim(
+          source: 'unit',
+          eventId: unitEvent,
+          unit: unit,
+        );
+        if (unitCatch != null) _caught.add(unitCatch);
+      }
+      if (wantsAccuracy) {
+        final accuracyCatch = await provider.claim(
+          source: 'accuracy',
+          eventId: accuracyEvent,
+          lessonId: widget.lesson.id,
+        );
+        if (accuracyCatch != null) _caught.add(accuracyCatch);
+      }
+    } finally {
+      if (mounted) {
+        _encounterController.stop();
+        setState(() => _checkingRewards = false);
+      }
+    }
     if (!mounted) return;
-    _encounterController.stop();
-    setState(() => _checkingRewards = false);
     if (_caught.isNotEmpty) {
       await Future<void>.delayed(const Duration(milliseconds: 180));
       if (mounted) await _showEncounterDialog(List.of(_caught));
+    } else if (provider.error != null &&
+        provider.error!.contains('timed out')) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'The encounter could not connect. Your catch is saved—complete this lesson again to recover the reveal.',
+          ),
+        ),
+      );
     }
   }
 

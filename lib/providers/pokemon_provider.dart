@@ -12,6 +12,8 @@ class PokemonProvider extends ChangeNotifier {
     };
   }
   Map<int, DateTime> caught = {};
+  Set<String> claimedRewards = {};
+  Map<String, int> accuracyRecords = {};
   int selectedRegion = 0,
       companionId = 0,
       practiceSeconds = 0,
@@ -46,12 +48,20 @@ class PokemonProvider extends ChangeNotifier {
     busy = true;
     error = null;
     notifyListeners();
-    final r = await ClassroomBridge.instance.claimPokemon(
+    var r = await ClassroomBridge.instance.claimPokemon(
       source: source,
       eventId: eventId,
       lessonId: lessonId,
       unit: unit,
     );
+    if (r['ok'] != true && '${r['error'] ?? ''}'.contains('timed out')) {
+      r = await ClassroomBridge.instance.claimPokemon(
+        source: source,
+        eventId: eventId,
+        lessonId: lessonId,
+        unit: unit,
+      );
+    }
     busy = false;
     if (r['ok'] != true) {
       error = '${r['error'] ?? 'Could not start the encounter.'}';
@@ -91,6 +101,17 @@ class PokemonProvider extends ChangeNotifier {
         int.parse('${e.key}'): DateTime.fromMillisecondsSinceEpoch(
           ((e.value as num?)?.toInt() ?? 0) * 1000,
         ),
+    };
+    claimedRewards = {
+      for (final item in (s['transactions'] as List?) ?? const [])
+        if (item is String)
+          item
+        else if (item is Map && item['id'] != null)
+          '${item['id']}',
+    };
+    accuracyRecords = {
+      for (final entry in ((s['accuracyRecords'] as Map?) ?? {}).entries)
+        '${entry.key}': (entry.value as num?)?.toInt() ?? 0,
     };
     selectedRegion = (s['selectedRegion'] as num?)?.toInt() ?? 0;
     companionId = (s['companionId'] as num?)?.toInt() ?? 0;
