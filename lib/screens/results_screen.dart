@@ -142,13 +142,11 @@ class _ResultsScreenState extends State<ResultsScreen>
     if (_caught.isNotEmpty) {
       await Future<void>.delayed(const Duration(milliseconds: 180));
       if (mounted) await _showEncounterDialog(List.of(_caught));
-    } else if (provider.error != null &&
-        provider.error!.contains('timed out')) {
+    } else if (provider.error != null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'The encounter could not connect. Your catch is saved—complete this lesson again to recover the reveal.',
-          ),
+        SnackBar(
+          content: Text(provider.error!),
+          duration: const Duration(seconds: 6),
         ),
       );
     }

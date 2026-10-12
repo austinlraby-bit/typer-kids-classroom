@@ -62,10 +62,13 @@ function saveActivity(token, request) {
         sheet.appendRow([sessionId, auth.studentId, now, accepted, activity, now, seconds]);
         creditPokemonPractice_(auth.studentId, accepted);
       }
-      return { ok: true, activeSeconds: seconds, pokemon: loadPokemonState_(auth.studentId), activity: weeklyActivity_(auth.studentId) };
     } finally {
       lock.releaseLock();
     }
+    // These reads can scan several rows and do not mutate shared state. Keep
+    // them outside the classroom-wide lock so rewards never queue behind a
+    // weekly-summary calculation.
+    return { ok: true, activeSeconds: seconds, pokemon: loadPokemonState_(auth.studentId), activity: weeklyActivity_(auth.studentId) };
   } catch (err) {
     return { ok: false, error: publicError_(err) };
   }
