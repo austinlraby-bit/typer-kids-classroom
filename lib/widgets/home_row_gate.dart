@@ -102,6 +102,7 @@ class _HomeRowGateState extends State<HomeRowGate> {
             child: LayoutBuilder(
               builder: (context, constraints) {
                 final pad = constraints.maxWidth > 800 ? 32.0 : 16.0;
+                final compactHeight = constraints.maxHeight < 700;
                 final keySize = ((constraints.maxWidth - pad * 2) / 15).clamp(
                   28.0,
                   64.0,
@@ -118,7 +119,7 @@ class _HomeRowGateState extends State<HomeRowGate> {
                                   ? 'Ready for adventure!'
                                   : 'Find home row',
                               style: GoogleFonts.fredoka(
-                                fontSize: 32,
+                                fontSize: compactHeight ? 28 : 32,
                                 fontWeight: FontWeight.w700,
                                 color: complete
                                     ? AppColors.correct
@@ -132,7 +133,7 @@ class _HomeRowGateState extends State<HomeRowGate> {
                                   : 'Rest your fingers on A S D F   J K L ;\nPress each highlighted key once.',
                               textAlign: TextAlign.center,
                               style: GoogleFonts.nunito(
-                                fontSize: 18,
+                                fontSize: compactHeight ? 16 : 18,
                                 color: AppColors.textSecondary,
                               ),
                             ),
@@ -186,6 +187,7 @@ class _HomeRowGateState extends State<HomeRowGate> {
                                     )
                                   : null,
                             ),
+                            SizedBox(height: compactHeight ? 18 : 12),
                           ],
                         ),
                       ),

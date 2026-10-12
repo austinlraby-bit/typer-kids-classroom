@@ -574,6 +574,7 @@ class _TypingScreenState extends State<TypingScreen> {
                 final horizontalPad = constraints.maxWidth > 800 ? 32.0 : 16.0;
                 final availableWidth = constraints.maxWidth - horizontalPad * 2;
                 final keySize = (availableWidth / 15).clamp(28.0, 64.0);
+                final compactHeight = constraints.maxHeight < 700;
 
                 return Column(
                   children: [
@@ -587,7 +588,7 @@ class _TypingScreenState extends State<TypingScreen> {
                               Text(
                                 isComplete ? 'Ready to type!' : 'Find home row',
                                 style: GoogleFonts.fredoka(
-                                  fontSize: 32,
+                                  fontSize: compactHeight ? 28 : 32,
                                   fontWeight: FontWeight.w700,
                                   color: isComplete
                                       ? AppColors.correct
@@ -601,7 +602,7 @@ class _TypingScreenState extends State<TypingScreen> {
                                     : 'Rest your fingers on A S D F   J K L ;\nThen press each highlighted key.',
                                 textAlign: TextAlign.center,
                                 style: GoogleFonts.nunito(
-                                  fontSize: 18,
+                                  fontSize: compactHeight ? 16 : 18,
                                   color: AppColors.textSecondary,
                                 ),
                               ),
@@ -622,6 +623,7 @@ class _TypingScreenState extends State<TypingScreen> {
                                       )
                                     : const SizedBox(height: 22),
                               ),
+                              SizedBox(height: compactHeight ? 18 : 12),
                             ],
                           ),
                         ),
