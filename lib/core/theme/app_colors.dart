@@ -1,31 +1,32 @@
 import 'package:flutter/material.dart';
 
-/// Color palette for Typer Kids - bright, fun, kid-friendly colors
+/// Pokémon-inspired classroom palette: Poké Ball red, electric yellow,
+/// adventure blue, and high-contrast trainer navy.
 class AppColors {
   AppColors._();
 
   // Primary palette
-  static const Color primary = Color(0xFF4CAF50); // Jungle green
-  static const Color primaryLight = Color(0xFF81C784);
-  static const Color primaryDark = Color(0xFF2E7D32);
+  static const Color primary = Color(0xFFE33535);
+  static const Color primaryLight = Color(0xFFFF7474);
+  static const Color primaryDark = Color(0xFFB71C2A);
 
   // Secondary palette
-  static const Color secondary = Color(0xFFFF9800); // Warm orange
-  static const Color secondaryLight = Color(0xFFFFB74D);
-  static const Color secondaryDark = Color(0xFFF57C00);
+  static const Color secondary = Color(0xFFFFCB05);
+  static const Color secondaryLight = Color(0xFFFFE16A);
+  static const Color secondaryDark = Color(0xFFD19F00);
 
   // Accent colors
-  static const Color accent = Color(0xFFE91E63); // Fun pink
-  static const Color accentLight = Color(0xFFF48FB1);
+  static const Color accent = Color(0xFF2A75BB);
+  static const Color accentLight = Color(0xFF72B9F2);
 
   // Background
-  static const Color background = Color(0xFFFFF8E1); // Warm cream
+  static const Color background = Color(0xFFF2F7FC);
   static const Color surface = Color(0xFFFFFFFF);
-  static const Color surfaceVariant = Color(0xFFF5F5F5);
+  static const Color surfaceVariant = Color(0xFFE7EFF8);
 
   // Text
-  static const Color textPrimary = Color(0xFF3E2723); // Dark brown
-  static const Color textSecondary = Color(0xFF5D4037);
+  static const Color textPrimary = Color(0xFF172A46);
+  static const Color textSecondary = Color(0xFF50647E);
   static const Color textLight = Color(0xFFFFFFFF);
 
   // Feedback colors

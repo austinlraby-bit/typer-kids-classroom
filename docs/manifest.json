@@ -1,6 +1,6 @@
 {
-    "name": "Typer Kids",
-    "short_name": "Typer Kids",
+    "name": "Pokémon Typing Adventure",
+    "short_name": "Pokémon Typing",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",

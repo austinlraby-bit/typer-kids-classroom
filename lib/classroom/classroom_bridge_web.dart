@@ -86,7 +86,7 @@ class ClassroomBridge {
         ClassroomSession(
           studentId: '${student['id'] ?? ''}',
           name: '${student['name'] ?? 'Student'}',
-          emoji: '${profile['avatar'] ?? '🐵'}',
+          emoji: '${profile['avatar'] ?? '⚡'}',
           version: (progress['version'] as num?)?.toInt() ?? 0,
           snapshot: snapshot,
           pokemon: (message['pokemon'] as Map?)?.cast<String, dynamic>() ?? {},

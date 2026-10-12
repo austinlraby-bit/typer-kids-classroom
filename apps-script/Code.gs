@@ -21,7 +21,7 @@ const KQ = Object.freeze({
 
 function doGet() {
   return HtmlService.createTemplateFromFile('Index').evaluate()
-    .setTitle('Typer Kids Classroom')
+    .setTitle('Pokémon Typing Adventure')
     .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.DEFAULT)
     .addMetaTag('viewport', 'width=device-width, initial-scale=1, viewport-fit=cover');
 }
@@ -32,7 +32,7 @@ function getTyperKidsUrl() {
 
 function setTyperKidsUrl(url) {
   url = String(url || '').trim().replace(/\/$/, '');
-  if (!/^https:\/\//.test(url)) throw new Error('Use the full https:// address for the Typer Kids site.');
+  if (!/^https:\/\//.test(url)) throw new Error('Use the full https:// address for the Pokémon Typing site.');
   PropertiesService.getScriptProperties().setProperty('TYPER_KIDS_URL', url);
   return url;
 }
@@ -67,5 +67,5 @@ function publicError_(err) {
   console.error(err && err.stack ? err.stack : err);
   const message = err && err.message ? err.message : String(err);
   if (/not set up|temporarily busy|expired|invalid|sign in|incorrect|not correct|four|six|classroom|too many|ask your teacher|no longer active|not found|already set|not active|finish|practic|region|complete|accuracy|Pokémon|reward/i.test(message)) return message;
-  return 'KeyQuest could not complete that request. Please try again.';
+  return 'Pokémon Typing could not complete that request. Please try again.';
 }

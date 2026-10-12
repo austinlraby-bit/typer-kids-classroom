@@ -369,33 +369,33 @@ class _HomeScreenState extends State<HomeScreen> {
         onTap: () => context.push('/adventure'),
       ),
       ActivityCard(
-        emoji: '🎮',
-        title: 'Typing Games',
-        subtitle: 'Have fun while you practice!',
+        emoji: '⚡',
+        title: 'Training Grounds',
+        subtitle: 'Practice with Pokémon mini-games',
         shortcut: 'G',
         color: AppColors.accent,
         onTap: () => _openGames(),
       ),
       ActivityCard(
-        emoji: '📖',
-        title: 'Free Practice',
-        subtitle: 'Type original stories at your pace',
+        emoji: '📘',
+        title: 'Professor’s Lab',
+        subtitle: 'Practice field notes at your pace',
         shortcut: 'F',
         color: AppColors.secondary,
         onTap: () => _openSandbox(),
       ),
       ActivityCard(
-        emoji: '⏱️',
-        title: 'Typing Test',
-        subtitle: 'Test your speed with a time limit',
+        emoji: '🏅',
+        title: 'Trainer Challenge',
+        subtitle: 'Take a timed typing challenge',
         shortcut: 'T',
         color: AppColors.primary,
         onTap: () => _openTypingTest(),
       ),
       if (trickyKeys.isNotEmpty)
         ActivityCard(
-          emoji: '🔧',
-          title: 'Tricky Keys',
+          emoji: '🎯',
+          title: 'Skill Training',
           subtitle:
               'Practice ${trickyKeys.map((k) => k.toUpperCase()).join(' ')} — '
               'the keys you miss most',
@@ -411,7 +411,7 @@ class _HomeScreenState extends State<HomeScreen> {
         Padding(
           padding: const EdgeInsets.only(left: 4, bottom: 10),
           child: Text(
-            'More Activities',
+            'Trainer Hub',
             style: GoogleFonts.fredoka(
               fontSize: 20,
               fontWeight: FontWeight.w600,

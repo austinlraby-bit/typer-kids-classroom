@@ -171,7 +171,7 @@ class _GameMenuScreenState extends State<GameMenuScreen> {
                         PokemonSprite(25, size: emojiSize + 18),
                         SizedBox(height: isTall ? 8 : 4),
                         Text(
-                          'Typing Games',
+                          'Pokémon Training Grounds',
                           style: GoogleFonts.fredoka(
                             fontSize: headerFontSize,
                             fontWeight: FontWeight.w700,
@@ -180,7 +180,7 @@ class _GameMenuScreenState extends State<GameMenuScreen> {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          'Have fun while you practice!',
+                          'Choose a training activity!',
                           style: GoogleFonts.nunito(
                             fontSize: isWide ? 16.0 : 14.0,
                             color: AppColors.textSecondary,

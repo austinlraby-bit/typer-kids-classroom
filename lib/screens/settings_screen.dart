@@ -184,7 +184,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             _buildInfoCard(
               context,
               children: [
-                _buildInfoRow('App', 'Typer Kids'),
+                _buildInfoRow('App', 'Pokémon Typing Adventure'),
                 _buildInfoRow('Version', '1.2.0'),
                 _buildInfoRow('Made with', '❤️ and Flutter'),
               ],

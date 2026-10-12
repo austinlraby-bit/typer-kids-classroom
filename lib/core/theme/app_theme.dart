@@ -3,7 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import 'app_colors.dart';
 
-/// Main theme for the Typer Kids app
+/// Main theme for Pokémon Typing Adventure.
 class AppTheme {
   AppTheme._();
 
@@ -67,7 +67,7 @@ class AppTheme {
         ),
       ),
       cardTheme: CardThemeData(
-        elevation: 4,
+        elevation: 2,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         color: AppColors.surface,
       ),

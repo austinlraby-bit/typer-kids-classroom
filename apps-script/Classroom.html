@@ -4,7 +4,7 @@
     classToken: null, token: null, student: null, progress: null, pokemon: null, version: 0,
     saveTimer: null, saving: false, saveAgain: false, pendingSnapshot: null,
     sessionId: null, startedAt: null, activeSeconds: 0, lastTick: 0,
-    lastKey: 0, activity: 'Typer Kids', activityTimer: null
+    lastKey: 0, activity: 'Pokémon Typing Adventure', activityTimer: null
   };
   const $ = id => document.getElementById(id);
   let appOrigin = '';
@@ -86,7 +86,7 @@
     if (!studentId || !/^\d{4}$/.test(pin)) return message('Enter exactly four numbers.', true);
     if (creating && pin !== $('login-pin-confirm').value) return message('Those two PINs do not match yet.', true);
     $('btn-login').disabled = true;
-    message(creating ? 'Making your PIN…' : 'Opening Typer Kids…');
+    message(creating ? 'Making your PIN…' : 'Opening your adventure…');
     try {
       const r = await call(creating ? 'createStudentPin' : 'login', state.classToken, studentId, pin);
       if (!r.ok) throw new Error(r.error);
@@ -134,7 +134,7 @@
       if (r.conflict && r.progress) {
         state.progress = r.progress;
         state.version = Number(r.version || 0);
-        alert('Your progress changed in another tab. Typer Kids will reload the newest copy.');
+        alert('Your progress changed in another tab. Pokémon Typing will reload the newest copy.');
         $('typer-frame').src = window.TYPER_KIDS_URL + '/?classroom=1&reload=' + Date.now();
       } else if (!r.ok) {
         throw new Error(r.error || 'Progress was not saved.');
@@ -234,7 +234,7 @@
     if (data.type === 'typer-ready') sendSession();
     if (data.type === 'typer-save') queueSave(data.snapshot || {});
     if (data.type === 'typer-activity') state.lastKey = performance.now();
-    if (data.type === 'typer-context') state.activity = String(data.activity || 'Typer Kids').slice(0, 80);
+    if (data.type === 'typer-context') state.activity = String(data.activity || 'Pokémon Typing Adventure').slice(0, 80);
     if (data.type === 'typer-logout') logout();
     if (data.type === 'pokemon-claim' || data.type === 'pokemon-preferences') pokemonRequest(data);
   });
