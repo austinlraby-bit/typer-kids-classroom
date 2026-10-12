@@ -18,7 +18,8 @@ class LessonCurriculum {
       orderIndex: 1,
       focusKeys: ['f', 'j'],
       emoji: '👆',
-      funTip: 'Put your pointer fingers on F and J. Can you feel the little bumps? Those help you find the right spot!',
+      funTip:
+          'Put your pointer fingers on F and J. Can you feel the little bumps? Those help you find the right spot!',
       exercises: [
         'fff jjj fff jjj',
         'fj fj fj fj fj fj',
@@ -36,7 +37,8 @@ class LessonCurriculum {
       orderIndex: 2,
       focusKeys: ['d', 'k'],
       emoji: '✌️',
-      funTip: 'Your middle fingers sit right next to your pointer fingers on D and K.',
+      funTip:
+          'Your middle fingers sit right next to your pointer fingers on D and K.',
       exercises: [
         'ddd kkk ddd kkk',
         'dk dk dk dk dk dk',
@@ -54,7 +56,8 @@ class LessonCurriculum {
       orderIndex: 3,
       focusKeys: ['s', 'l'],
       emoji: '💍',
-      funTip: 'Your ring fingers rest on S and L. They might feel a bit shy at first!',
+      funTip:
+          'Your ring fingers rest on S and L. They might feel a bit shy at first!',
       exercises: [
         'sss lll sss lll',
         'sl sl sl sl sl sl',
@@ -131,7 +134,8 @@ class LessonCurriculum {
       orderIndex: 7,
       focusKeys: ['g', 'h'],
       emoji: '🤲',
-      funTip: 'G and H are in the middle. Your pointer fingers reach inward to type them!',
+      funTip:
+          'G and H are in the middle. Your pointer fingers reach inward to type them!',
       exercises: [
         'ggg hhh ggg hhh',
         'gh gh gh gh gh gh',
@@ -171,7 +175,8 @@ class LessonCurriculum {
       orderIndex: 9,
       focusKeys: ['e', 'i'],
       emoji: '⬆️',
-      funTip: 'E and I are right above D and K. Lift your middle fingers up, then bring them back home!',
+      funTip:
+          'E and I are right above D and K. Lift your middle fingers up, then bring them back home!',
       exercises: [
         'eee iii eee iii',
         'ded kik ded kik',
@@ -226,7 +231,8 @@ class LessonCurriculum {
       orderIndex: 12,
       focusKeys: ['w', 'o'],
       emoji: '🦉',
-      funTip: 'W is above S, and O is above L. Your ring fingers take a little trip!',
+      funTip:
+          'W is above S, and O is above L. Your ring fingers take a little trip!',
       exercises: [
         'www ooo www ooo',
         'sws lol sws lol',
@@ -357,7 +363,8 @@ class LessonCurriculum {
       orderIndex: 19,
       focusKeys: ['b', ','],
       emoji: '🐝',
-      funTip: 'B is typed with your left index finger, comma with your right middle finger.',
+      funTip:
+          'B is typed with your left index finger, comma with your right middle finger.',
       exercises: [
         'bbb ,,, bbb ,,,',
         'fbf k,k fbf k,k',

@@ -560,8 +560,9 @@ class _WordBubblesScreenState extends State<WordBubblesScreen> {
                           vertical: 3,
                         ),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF26C6DA)
-                              .withValues(alpha: 0.12),
+                          color: const Color(
+                            0xFF26C6DA,
+                          ).withValues(alpha: 0.12),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(

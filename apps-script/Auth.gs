@@ -1,5 +1,38 @@
-function getLoginRoster() {
+function enterClassroom(code) {
   try {
+    code = String(code || '').trim();
+    if (!/^\d{6}$/.test(code)) throw new Error('Enter the six-digit classroom code.');
+    const attemptCache = CacheService.getScriptCache();
+    const attempts = Number(attemptCache.get('class-attempts') || 0);
+    if (attempts >= 10) throw new Error('Too many classroom code tries. Wait one minute, then try again.');
+    const stored = PropertiesService.getScriptProperties().getProperty('CLASS_CODE_HASH');
+    if (!stored) throw new Error('The classroom code is not set up yet. Ask your teacher.');
+    const parts = stored.split('$');
+    if (parts.length !== 3 || parts[0] !== 'v1' || !constantTimeEqual_(parts[2], digest_(parts[1] + ':' + code))) {
+      attemptCache.put('class-attempts', String(attempts + 1), 60);
+      Utilities.sleep(250);
+      throw new Error('That classroom code is not correct.');
+    }
+    attemptCache.remove('class-attempts');
+    const token = Utilities.getUuid() + Utilities.getUuid();
+    CacheService.getScriptCache().put('class:' + digest_(token), '1', KQ.CLASS_GATE_TTL);
+    return { ok: true, classToken: token };
+  } catch (err) {
+    return { ok: false, error: publicError_(err) };
+  }
+}
+
+function requireClassroom_(classToken) {
+  if (!classToken || typeof classToken !== 'string' || classToken.length > 200) throw new Error('Your classroom access expired. Enter the classroom code again.');
+  const key = 'class:' + digest_(classToken);
+  const cache = CacheService.getScriptCache();
+  if (!cache.get(key)) throw new Error('Your classroom access expired. Enter the classroom code again.');
+  cache.put(key, '1', KQ.CLASS_GATE_TTL);
+}
+
+function getLoginRoster(classToken) {
+  try {
+    requireClassroom_(classToken);
     const sheet = getSpreadsheet_().getSheetByName(KQ.STUDENTS);
     if (!sheet || sheet.getLastRow() < 2) return { ok: true, students: [] };
     const range = sheet.getRange(2, 1, sheet.getLastRow() - 1, 5);
@@ -20,8 +53,9 @@ function getLoginRoster() {
   }
 }
 
-function createStudentPin(studentId, pin) {
+function createStudentPin(classToken, studentId, pin) {
   try {
+    requireClassroom_(classToken);
     studentId = String(studentId || '');
     pin = String(pin || '');
     if (!/^\d{4}$/.test(pin)) throw new Error('Choose exactly four numbers for your PIN.');
@@ -39,14 +73,15 @@ function createStudentPin(studentId, pin) {
     } finally {
       lock.releaseLock();
     }
-    return login(studentId, pin);
+    return login(classToken, studentId, pin);
   } catch (err) {
     return { ok: false, error: publicError_(err) };
   }
 }
 
-function login(studentId, pin) {
+function login(classToken, studentId, pin) {
   try {
+    requireClassroom_(classToken);
     studentId = String(studentId || '');
     pin = String(pin || '');
     if (!/^\d{4}$/.test(pin)) throw new Error('Enter a four-digit PIN.');

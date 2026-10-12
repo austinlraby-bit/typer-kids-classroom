@@ -10,6 +10,7 @@ const KQ = Object.freeze({
   SUMMARY: 'Weekly Summary',
   SETTINGS: 'Settings',
   SESSION_TTL: 21600,
+  CLASS_GATE_TTL: 21600,
   // Google Sheets cells accept at most 50,000 characters.
   MAX_PROGRESS_BYTES: 45000,
   LOCK_WAIT_MS: 20000,
@@ -38,6 +39,14 @@ function configureTyperKidsUrl() {
   return setTyperKidsUrl('https://austinlraby-bit.github.io/typer-kids-classroom');
 }
 
+function configureClassroomCode() {
+  const code = String(Math.floor(100000 + Math.random() * 900000));
+  const salt = Utilities.getUuid().replace(/-/g, '');
+  PropertiesService.getScriptProperties().setProperty('CLASS_CODE_HASH', 'v1$' + salt + '$' + digest_(salt + ':' + code));
+  console.log('New classroom code: ' + code);
+  return 'New classroom code: ' + code;
+}
+
 function include(filename) {
   return HtmlService.createHtmlOutputFromFile(filename).getContent();
 }
@@ -55,6 +64,6 @@ function getSpreadsheet_() {
 function publicError_(err) {
   console.error(err && err.stack ? err.stack : err);
   const message = err && err.message ? err.message : String(err);
-  if (/not set up|temporarily busy|session expired|invalid|sign in|incorrect|four|too many|ask your teacher|no longer active|not found|already set|not active/i.test(message)) return message;
+  if (/not set up|temporarily busy|expired|invalid|sign in|incorrect|not correct|four|six|classroom|too many|ask your teacher|no longer active|not found|already set|not active/i.test(message)) return message;
   return 'KeyQuest could not complete that request. Please try again.';
 }

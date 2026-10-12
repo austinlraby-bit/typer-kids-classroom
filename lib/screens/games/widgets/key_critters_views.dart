@@ -114,7 +114,7 @@ class KeyCrittersMenu extends StatelessWidget {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          'Critters pop out holding a key — press it to bonk them before they hide!',
+                          'Critters pop out holding a key — press it to help them before they hide!',
                           style: GoogleFonts.nunito(
                             fontSize: isWide ? 16 : 14,
                             color: AppColors.textSecondary,
@@ -200,7 +200,7 @@ class KeyCrittersMenu extends StatelessWidget {
                                 const SizedBox(width: 6),
                                 Flexible(
                                   child: Text(
-                                    'Start Bonking',
+                                    'Start Helping',
                                     style: GoogleFonts.fredoka(
                                       fontSize: isWide ? 22 : 18,
                                       fontWeight: FontWeight.w600,
@@ -301,7 +301,7 @@ class KeyCrittersGameOver extends StatelessWidget {
                         ),
                         SizedBox(height: isTall ? 8 : 4),
                         Text(
-                          'Garden Closed!',
+                          'Great Helping!',
                           style: GoogleFonts.fredoka(
                             fontSize: isWide ? 36 : 28,
                             fontWeight: FontWeight.w700,
@@ -376,14 +376,14 @@ class KeyCrittersGameOver extends StatelessWidget {
                         Row(
                           children: [
                             EmojiStatTile(
-                              emoji: '🔨',
-                              label: 'Bonked',
+                              emoji: '💛',
+                              label: 'Helped',
                               value: '$bonked',
                             ),
                             const SizedBox(width: 12),
                             EmojiStatTile(
                               emoji: '💨',
-                              label: 'Escaped',
+                              label: 'Hid',
                               value: '$escaped',
                             ),
                           ],

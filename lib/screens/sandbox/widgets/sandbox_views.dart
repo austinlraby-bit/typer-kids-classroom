@@ -100,7 +100,7 @@ class SandboxSetupView extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      'Type passages from classic stories at your own pace',
+                      'Type original stories at your own pace',
                       style: GoogleFonts.nunito(
                         fontSize: 16,
                         color: AppColors.textSecondary,

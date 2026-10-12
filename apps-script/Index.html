@@ -12,6 +12,15 @@
     <section class="login-card">
       <div class="mascot" aria-hidden="true">🐵</div>
       <p class="eyebrow">TYPER KIDS</p>
+      <div id="class-gate">
+        <h1>Welcome, typist!</h1>
+        <p class="intro">Enter your classroom code to begin.</p>
+        <label for="class-code">Classroom code</label>
+        <input id="class-code" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="6" autocomplete="off" placeholder="••••••">
+        <button id="btn-class">Enter classroom <span aria-hidden="true">→</span></button>
+      </div>
+
+      <div id="student-gate" hidden>
       <h1>Who’s typing today?</h1>
       <p class="intro">Choose your name, then use your four-digit PIN.</p>
 
@@ -31,6 +40,8 @@
         <button id="btn-login" disabled>Let’s type <span aria-hidden="true">→</span></button>
       </div>
       <p id="login-message" class="message" role="status" aria-live="polite"></p>
+      </div>
+      <p id="class-message" class="message" role="status" aria-live="polite"></p>
     </section>
   </main>
 

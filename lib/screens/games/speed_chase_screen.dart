@@ -415,8 +415,9 @@ class _SpeedChaseScreenState extends State<SpeedChaseScreen> {
                               vertical: 3,
                             ),
                             decoration: BoxDecoration(
-                              color: const Color(0xFFE53935)
-                                  .withValues(alpha: 0.12),
+                              color: const Color(
+                                0xFFE53935,
+                              ).withValues(alpha: 0.12),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Text(
@@ -485,8 +486,8 @@ class _SpeedChaseScreenState extends State<SpeedChaseScreen> {
             const SizedBox(height: 8),
             // Ghost track
             _buildTrackLane(
-              '👻',
-              'Ghost',
+              '☄️',
+              'Comet',
               _ghostProgress,
               Colors.grey.shade400,
             ),

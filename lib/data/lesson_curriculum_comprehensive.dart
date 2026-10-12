@@ -650,7 +650,7 @@ class ComprehensiveLessonCurriculum {
         'knee',
         'kneel',
         'knack',
-        'knife',
+        'knots',
         'knock',
       ],
     };

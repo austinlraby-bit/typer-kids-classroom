@@ -423,8 +423,8 @@ class _DefendTempleScreenState extends State<DefendTempleScreen>
       builder: (ctx) => QuitDialog(
         title: 'Leave the Garden?',
         message: 'Your current Garden Guard round will end.',
-        stayLabel: 'Stay & Fight',
-        quitLabel: 'Retreat',
+        stayLabel: 'Keep Gardening',
+        quitLabel: 'Take a Break',
         stayBadge: 'Esc',
         quitBadge: 'Q',
         stayKey: LogicalKeyboardKey.keyR,
@@ -572,7 +572,7 @@ class _DefendTempleScreenState extends State<DefendTempleScreen>
           const SizedBox(width: 12),
           // Streak
           if (_streak > 1) ...[
-            const Text('⚔️', style: TextStyle(fontSize: 16)),
+            const Text('✨', style: TextStyle(fontSize: 16)),
             const SizedBox(width: 2),
             Text(
               '$_streak',

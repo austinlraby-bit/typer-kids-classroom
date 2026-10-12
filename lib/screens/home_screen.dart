@@ -366,7 +366,7 @@ class _HomeScreenState extends State<HomeScreen> {
       ActivityCard(
         emoji: '📖',
         title: 'Free Practice',
-        subtitle: 'Type classic stories at your pace',
+        subtitle: 'Type original stories at your pace',
         shortcut: 'F',
         color: AppColors.secondary,
         onTap: () => _openSandbox(),

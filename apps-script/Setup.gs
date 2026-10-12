@@ -5,6 +5,9 @@ function setupKeyQuest() {
   if (!PropertiesService.getScriptProperties().getProperty('PIN_PEPPER')) {
     PropertiesService.getScriptProperties().setProperty('PIN_PEPPER', Utilities.getUuid() + Utilities.getUuid());
   }
+  if (!PropertiesService.getScriptProperties().getProperty('CLASS_CODE_HASH')) {
+    configureClassroomCode();
+  }
   setupSheet_(ss, KQ.STUDENTS, ['Student ID', 'First Name', 'Last Initial', 'PIN', 'Active']);
   setupSheet_(ss, KQ.PROGRESS, ['Student ID', 'Current Lesson', 'Completed Lessons', 'Best WPM', 'Accuracy', 'Progress Data']);
   const sessions = setupSheet_(ss, KQ.SESSIONS, ['Session ID', 'Student ID', 'Date', 'Active Seconds', 'Activity']);

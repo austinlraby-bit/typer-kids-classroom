@@ -177,13 +177,10 @@ class DefendTempleMenu extends StatelessWidget {
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                const Text(
-                                  '⚔️',
-                                  style: TextStyle(fontSize: 22),
-                                ),
+                                const Text('✨', style: TextStyle(fontSize: 22)),
                                 const SizedBox(width: 8),
                                 Text(
-                                  'Defend!',
+                                  'Clear Clouds!',
                                   style: GoogleFonts.fredoka(fontSize: 22),
                                 ),
                                 const SizedBox(width: 8),

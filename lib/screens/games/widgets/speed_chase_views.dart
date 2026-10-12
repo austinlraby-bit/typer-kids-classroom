@@ -110,7 +110,7 @@ class SpeedChaseMenu extends StatelessWidget {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          'Type words faster than the ghost racer!',
+                          'Type words faster than the comet racer!',
                           style: GoogleFonts.nunito(
                             fontSize: isWide ? 16 : 14,
                             color: AppColors.textSecondary,

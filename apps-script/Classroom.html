@@ -1,7 +1,7 @@
 <script>
 (() => {
   const state = {
-    token: null, student: null, progress: null, version: 0,
+    classToken: null, token: null, student: null, progress: null, version: 0,
     saveTimer: null, saving: false, saveAgain: false, pendingSnapshot: null,
     sessionId: null, startedAt: null, activeSeconds: 0, lastTick: 0,
     lastKey: 0, activity: 'Typer Kids', activityTimer: null
@@ -24,19 +24,44 @@
     $('login-message').textContent = text || '';
     $('login-message').classList.toggle('error', !!error);
   }
-  async function boot() {
+  async function loadRoster() {
     if (!window.TYPER_KIDS_URL) {
       message('The typing site is not connected yet. Ask your teacher to finish setup.', true);
       return;
     }
     try {
-      const r = await call('getLoginRoster');
+      const r = await call('getLoginRoster', state.classToken);
       if (!r.ok) throw new Error(r.error);
       $('login-student').innerHTML = '<option value="">Choose your name…</option>' +
         r.students.map(s => `<option value="${escapeHtml(s.id)}" data-needs-pin="${s.needsPin ? '1' : '0'}">${escapeHtml(s.name)}</option>`).join('');
       $('login-student').disabled = false;
       message(r.students.length ? '' : 'Ask your teacher to add students to the spreadsheet.');
     } catch (e) { message(e.message, true); }
+  }
+  async function enterClassroom() {
+    const code = $('class-code').value;
+    if (!/^\d{6}$/.test(code)) {
+      $('class-message').textContent = 'Enter all six numbers.';
+      $('class-message').classList.add('error');
+      return;
+    }
+    $('btn-class').disabled = true;
+    $('class-message').textContent = 'Opening your classroom…';
+    $('class-message').classList.remove('error');
+    try {
+      const r = await call('enterClassroom', code);
+      if (!r.ok) throw new Error(r.error);
+      state.classToken = r.classToken;
+      $('class-code').value = '';
+      $('class-gate').hidden = true;
+      $('class-message').hidden = true;
+      $('student-gate').hidden = false;
+      await loadRoster();
+    } catch (e) {
+      $('class-message').textContent = e.message;
+      $('class-message').classList.add('error');
+      $('btn-class').disabled = false;
+    }
   }
   function updatePinMode() {
     const option = $('login-student').selectedOptions[0];
@@ -63,7 +88,7 @@
     $('btn-login').disabled = true;
     message(creating ? 'Making your PIN…' : 'Opening Typer Kids…');
     try {
-      const r = await call(creating ? 'createStudentPin' : 'login', studentId, pin);
+      const r = await call(creating ? 'createStudentPin' : 'login', state.classToken, studentId, pin);
       if (!r.ok) throw new Error(r.error);
       state.token = r.token;
       state.student = r.student;
@@ -186,6 +211,7 @@
   [$('login-pin'), $('login-pin-confirm')].forEach(el => el.addEventListener('keydown', e => { if (e.key === 'Enter') signIn(); }));
   window.addEventListener('online', () => { flushSave(); flushActivity(); });
   window.addEventListener('pagehide', () => { flushSave(); flushActivity(); });
-  boot();
+  $('btn-class').addEventListener('click', enterClassroom);
+  $('class-code').addEventListener('keydown', e => { if (e.key === 'Enter') enterClassroom(); });
 })();
 </script>

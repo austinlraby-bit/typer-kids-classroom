@@ -104,7 +104,7 @@ class _GameMenuScreenState extends State<GameMenuScreen> {
                 _GameCard(
                   emoji: '🏎️',
                   title: 'Speed Chase',
-                  description: 'Type words faster than the ghost racer!',
+                  description: 'Type words faster than the comet racer!',
                   shortcut: '4',
                   color: const Color(0xFFE53935),
                   compact: !isTall,
@@ -113,7 +113,7 @@ class _GameMenuScreenState extends State<GameMenuScreen> {
                 _GameCard(
                   emoji: '🐹',
                   title: 'Key Critters',
-                  description: 'Bonk the critters by pressing their keys!',
+                  description: 'Help the critters by pressing their keys!',
                   shortcut: '5',
                   color: const Color(0xFF43A047),
                   compact: !isTall,
