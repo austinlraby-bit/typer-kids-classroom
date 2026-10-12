@@ -128,6 +128,8 @@ class _TypingScreenState extends State<TypingScreen> {
               _homeRowMistake = false;
               _isTransitioning = false;
             });
+            _typingProvider.resume();
+            _focusNode.requestFocus();
           }
         });
       }
