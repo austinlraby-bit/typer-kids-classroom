@@ -199,7 +199,7 @@ class ClassroomBridge {
     _requests[requestId] = completer;
     _send({'type': type, 'requestId': requestId, ...payload});
     return completer.future.timeout(
-      const Duration(seconds: 20),
+      const Duration(seconds: 12),
       onTimeout: () {
         _requests.remove(requestId);
         return {

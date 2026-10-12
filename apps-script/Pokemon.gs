@@ -94,8 +94,7 @@ function claimPokemon(token, request) {
     request = request || {};
     const source = String(request.source || '');
     const eventId = validateId_(request.eventId, 'reward');
-    const lock = LockService.getScriptLock(); lock.waitLock(KQ.LOCK_WAIT_MS);
-    try {
+    {
       const state = loadPokemonState_(auth.studentId);
       const priorTransaction = findPokemonTransaction_(state.transactions, eventId);
       if (priorTransaction.found) return {ok:true, duplicate:true,
@@ -140,7 +139,7 @@ function claimPokemon(token, request) {
       state.transactions.push({id:eventId, pokemonId:pokemonId});
       savePokemonState_(state);
       return {ok:true, caughtId:pokemonId, pokemon:state};
-    } finally { lock.releaseLock(); }
+    }
   } catch (err) { return {ok:false, error:publicError_(err)}; }
 }
 

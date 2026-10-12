@@ -48,20 +48,12 @@ class PokemonProvider extends ChangeNotifier {
     busy = true;
     error = null;
     notifyListeners();
-    var r = await ClassroomBridge.instance.claimPokemon(
+    final r = await ClassroomBridge.instance.claimPokemon(
       source: source,
       eventId: eventId,
       lessonId: lessonId,
       unit: unit,
     );
-    if (r['ok'] != true && '${r['error'] ?? ''}'.contains('timed out')) {
-      r = await ClassroomBridge.instance.claimPokemon(
-        source: source,
-        eventId: eventId,
-        lessonId: lessonId,
-        unit: unit,
-      );
-    }
     busy = false;
     if (r['ok'] != true) {
       error = '${r['error'] ?? 'Could not start the encounter.'}';
