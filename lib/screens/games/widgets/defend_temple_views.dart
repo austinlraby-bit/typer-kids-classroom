@@ -119,7 +119,7 @@ class DefendTempleMenu extends StatelessWidget {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          'Storm clouds are rolling in! Type each word\nto turn them into sunshine.',
+                          'Mischievous Pokémon are approaching! Type each word\nto guide them back to their Trainers.',
                           style: GoogleFonts.nunito(
                             fontSize: isWide ? 16.0 : 14.0,
                             color: Colors.white60,
@@ -181,7 +181,7 @@ class DefendTempleMenu extends StatelessWidget {
                                 const Text('✨', style: TextStyle(fontSize: 22)),
                                 const SizedBox(width: 8),
                                 Text(
-                                  'Clear Clouds!',
+                                  'Guard the Center!',
                                   style: GoogleFonts.fredoka(fontSize: 22),
                                 ),
                                 const SizedBox(width: 8),
@@ -287,10 +287,10 @@ class DefendTempleGameOver extends StatelessWidget {
                     constraints: BoxConstraints(maxWidth: maxW),
                     child: Column(
                       children: [
-                        Text('🌧️', style: TextStyle(fontSize: emojiSize)),
+                        Text('🏥', style: TextStyle(fontSize: emojiSize)),
                         SizedBox(height: isTall ? 8 : 4),
                         Text(
-                          'The Garden Needs a Break',
+                          'Center Closed for Repairs',
                           style: GoogleFonts.fredoka(
                             fontSize: headerFontSize,
                             fontWeight: FontWeight.w700,
@@ -366,15 +366,15 @@ class DefendTempleGameOver extends StatelessWidget {
                         Row(
                           children: [
                             EmojiStatTile(
-                              emoji: '☀️',
-                              label: 'Cleared',
+                              emoji: '✅',
+                              label: 'Guided Away',
                               value: '$demonsSlain',
                               dark: true,
                             ),
                             const SizedBox(width: 12),
                             EmojiStatTile(
-                              emoji: '💧',
-                              label: 'Reached',
+                              emoji: '🏥',
+                              label: 'Reached Center',
                               value: '$demonsReached',
                               dark: true,
                             ),

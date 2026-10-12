@@ -275,7 +275,7 @@ class _KeyCrittersScreenState extends State<KeyCrittersScreen> {
       context: context,
       barrierDismissible: false,
       builder: (ctx) => QuitDialog(
-        title: 'Leave the Garden?',
+        title: 'Leave Diglett’s Field?',
         message: 'Your current score will be lost.',
         stayLabel: 'Resume',
         quitLabel: 'Quit',
@@ -483,7 +483,7 @@ class _KeyCrittersScreenState extends State<KeyCrittersScreen> {
                 Padding(
                   padding: const EdgeInsets.only(bottom: 10),
                   child: Text(
-                    'Press the key on each critter before it hides!',
+                    'Press the key on each Diglett before it burrows!',
                     style: GoogleFonts.nunito(
                       fontSize: 13,
                       color: AppColors.textSecondary,

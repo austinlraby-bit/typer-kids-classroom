@@ -112,7 +112,7 @@ class KeyCrittersMenu extends StatelessWidget {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          'Critters pop out holding a key — press it to help them before they hide!',
+                          'Diglett pops up holding a key — press it before Diglett burrows away!',
                           style: GoogleFonts.nunito(
                             fontSize: isWide ? 16 : 14,
                             color: AppColors.textSecondary,
@@ -375,13 +375,13 @@ class KeyCrittersGameOver extends StatelessWidget {
                           children: [
                             EmojiStatTile(
                               emoji: '💛',
-                              label: 'Helped',
+                              label: 'Diglett Found',
                               value: '$bonked',
                             ),
                             const SizedBox(width: 12),
                             EmojiStatTile(
                               emoji: '💨',
-                              label: 'Hid',
+                              label: 'Burrowed',
                               value: '$escaped',
                             ),
                           ],

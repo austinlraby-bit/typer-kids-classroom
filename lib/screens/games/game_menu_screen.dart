@@ -78,7 +78,7 @@ class _GameMenuScreenState extends State<GameMenuScreen> {
                   pokemonId: 113,
                   title: 'Pokémon Center Guard',
                   description:
-                      'Clear the storm clouds before they reach the garden!',
+                      'Guide mischievous Pokémon away from the Center!',
                   shortcut: '1',
                   color: const Color(0xFF8B0000),
                   compact: !isTall,
@@ -105,7 +105,7 @@ class _GameMenuScreenState extends State<GameMenuScreen> {
                 _GameCard(
                   pokemonId: 78,
                   title: 'Rapidash Race',
-                  description: 'Type words faster than the comet racer!',
+                  description: 'Help Rapidash keep pace with Ponyta!',
                   shortcut: '4',
                   color: const Color(0xFFE53935),
                   compact: !isTall,
@@ -114,7 +114,7 @@ class _GameMenuScreenState extends State<GameMenuScreen> {
                 _GameCard(
                   pokemonId: 50,
                   title: 'Diglett’s Digging Game',
-                  description: 'Help the critters by pressing their keys!',
+                  description: 'Press each key before Diglett burrows away!',
                   shortcut: '5',
                   color: const Color(0xFF43A047),
                   compact: !isTall,
@@ -123,7 +123,7 @@ class _GameMenuScreenState extends State<GameMenuScreen> {
                 _GameCard(
                   pokemonId: 133,
                   title: 'Pokémon Dash',
-                  description: 'Type full sentences to sprint down the track!',
+                  description: 'Help Eevee dash along the adventure trail!',
                   shortcut: '6',
                   color: const Color(0xFFFB8C00),
                   compact: !isTall,

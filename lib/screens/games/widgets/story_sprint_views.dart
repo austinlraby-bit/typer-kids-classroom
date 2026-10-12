@@ -110,7 +110,7 @@ class StorySprintMenu extends StatelessWidget {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          'Type sentences to sprint down the track — every finished sentence is another 100 m!',
+                          'Type each field note to help Eevee explore the adventure trail!',
                           style: GoogleFonts.nunito(
                             fontSize: isWide ? 16 : 14,
                             color: AppColors.textSecondary,
@@ -179,7 +179,7 @@ class StorySprintMenu extends StatelessWidget {
                                 const SizedBox(width: 6),
                                 Flexible(
                                   child: Text(
-                                    'Start Running',
+                                    'Start Adventure',
                                     style: GoogleFonts.fredoka(
                                       fontSize: isWide ? 22 : 18,
                                       fontWeight: FontWeight.w600,
@@ -282,7 +282,7 @@ class StorySprintGameOver extends StatelessWidget {
                         ),
                         SizedBox(height: isTall ? 8 : 4),
                         Text(
-                          'Race Finished!',
+                          'Adventure Complete!',
                           style: GoogleFonts.fredoka(
                             fontSize: isWide ? 36 : 28,
                             fontWeight: FontWeight.w700,
@@ -291,7 +291,7 @@ class StorySprintGameOver extends StatelessWidget {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          'You ran $distance meters!',
+                          'Eevee explored $distance meters!',
                           style: GoogleFonts.nunito(
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
@@ -413,7 +413,7 @@ class StorySprintGameOver extends StatelessWidget {
                                 const Icon(Icons.replay_rounded, size: 24),
                                 const SizedBox(width: 8),
                                 Text(
-                                  'Run Again',
+                                  'Explore Again',
                                   style: GoogleFonts.fredoka(fontSize: 20),
                                 ),
                                 const SizedBox(width: 8),

@@ -30,6 +30,7 @@ class _ResultsScreenState extends State<ResultsScreen>
     with TickerProviderStateMixin {
   late ConfettiController _confettiController;
   late AnimationController _slideController;
+  late AnimationController _encounterController;
   late Animation<Offset> _slideAnimation;
   final FocusNode _focusNode = FocusNode();
   final List<PokemonSpecies> _caught = [];
@@ -43,6 +44,10 @@ class _ResultsScreenState extends State<ResultsScreen>
     );
     _slideController = AnimationController(
       duration: const Duration(milliseconds: 800),
+      vsync: this,
+    );
+    _encounterController = AnimationController(
+      duration: const Duration(milliseconds: 850),
       vsync: this,
     );
     _slideAnimation =
@@ -68,6 +73,7 @@ class _ResultsScreenState extends State<ResultsScreen>
   Future<void> _claimRewards() async {
     if (_passed != true || !mounted) return;
     setState(() => _checkingRewards = true);
+    _encounterController.repeat();
     final provider = context.read<PokemonProvider>();
     final completed = context.read<ProgressProvider>().completedLessons;
     final lessonPart = widget.lesson.id.replaceAll(
@@ -96,10 +102,17 @@ class _ResultsScreenState extends State<ResultsScreen>
       lessonId: widget.lesson.id,
     );
     if (accuracyCatch != null) _caught.add(accuracyCatch);
-    if (mounted) setState(() => _checkingRewards = false);
+    if (!mounted) return;
+    _encounterController.stop();
+    setState(() => _checkingRewards = false);
+    if (_caught.isNotEmpty) {
+      await Future<void>.delayed(const Duration(milliseconds: 180));
+      if (mounted) await _showEncounterDialog(List.of(_caught));
+    }
   }
 
   void _handleKeyEvent(KeyEvent event) {
+    if (_checkingRewards) return;
     if (event is! KeyDownEvent) return;
     final key = event.logicalKey;
     if (key == LogicalKeyboardKey.enter || key == LogicalKeyboardKey.keyN) {
@@ -140,6 +153,7 @@ class _ResultsScreenState extends State<ResultsScreen>
   void dispose() {
     _confettiController.dispose();
     _slideController.dispose();
+    _encounterController.dispose();
     _focusNode.dispose();
     super.dispose();
   }
@@ -183,11 +197,6 @@ class _ResultsScreenState extends State<ResultsScreen>
                                   ],
                                   const SizedBox(height: 24),
                                   _buildStars(),
-                                  if (_checkingRewards ||
-                                      _caught.isNotEmpty) ...[
-                                    const SizedBox(height: 18),
-                                    _buildPokemonReward(),
-                                  ],
                                   const SizedBox(height: 32),
                                   _buildStatsGrid(),
                                   const SizedBox(height: 32),
@@ -220,6 +229,7 @@ class _ResultsScreenState extends State<ResultsScreen>
                 gravity: 0.2,
               ),
             ),
+            if (_checkingRewards) _buildEncounterLoadingOverlay(),
           ],
         ),
       ),
@@ -246,10 +256,6 @@ class _ResultsScreenState extends State<ResultsScreen>
               ],
               const SizedBox(height: 12),
               _buildStars(),
-              if (_checkingRewards || _caught.isNotEmpty) ...[
-                const SizedBox(height: 12),
-                _buildPokemonReward(),
-              ],
               const SizedBox(height: 16),
               _buildStatsGrid(),
             ],
@@ -290,69 +296,138 @@ class _ResultsScreenState extends State<ResultsScreen>
     );
   }
 
-  Widget _buildPokemonReward() {
-    if (_checkingRewards && _caught.isEmpty) {
-      return const Card(
-        child: Padding(
-          padding: EdgeInsets.all(16),
-          child: Row(
+  Widget _buildEncounterLoadingOverlay() {
+    return Positioned.fill(
+      child: ColoredBox(
+        color: const Color(0xAA152238),
+        child: Center(
+          child: Card(
+            elevation: 18,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(28),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 30),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  RotationTransition(
+                    turns: _encounterController,
+                    child: const _Pokeball(size: 84),
+                  ),
+                  const SizedBox(height: 18),
+                  Text(
+                    'A wild Pokémon is nearby…',
+                    style: GoogleFonts.fredoka(
+                      fontSize: 24,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    'Preparing your encounter!',
+                    style: GoogleFonts.nunito(
+                      fontSize: 16,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _showEncounterDialog(List<PokemonSpecies> catches) {
+    final plural = catches.length > 1;
+    return showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+        backgroundColor: const Color(0xFFFFFBEC),
+        title: Text(
+          'Gotcha! 🎉',
+          textAlign: TextAlign.center,
+          style: GoogleFonts.fredoka(
+            fontSize: 32,
+            fontWeight: FontWeight.w700,
+            color: AppColors.primary,
+          ),
+        ),
+        content: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 520),
+          child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              SizedBox(
-                width: 22,
-                height: 22,
-                child: CircularProgressIndicator(strokeWidth: 3),
+              Wrap(
+                alignment: WrapAlignment.center,
+                spacing: 18,
+                runSpacing: 14,
+                children: catches
+                    .map(
+                      (pokemon) => Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Image.network(
+                            pokemon.spriteUrl,
+                            width: 112,
+                            height: 112,
+                            filterQuality: FilterQuality.none,
+                            errorBuilder: (context, error, stackTrace) =>
+                                const Icon(
+                                  Icons.catching_pokemon,
+                                  size: 92,
+                                  color: AppColors.primary,
+                                ),
+                          ),
+                          Text(
+                            pokemon.name,
+                            style: GoogleFonts.fredoka(
+                              fontSize: 22,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.textPrimary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    )
+                    .toList(),
               ),
-              SizedBox(width: 12),
-              Text('A wild Pokémon is nearby…'),
+              const SizedBox(height: 18),
+              Text(
+                plural
+                    ? 'These Pokémon joined your classroom team!'
+                    : '${catches.first.name} joined your classroom team!',
+                textAlign: TextAlign.center,
+                style: GoogleFonts.nunito(
+                  fontSize: 17,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.textSecondary,
+                ),
+              ),
             ],
           ),
         ),
-      );
-    }
-    return Wrap(
-      alignment: WrapAlignment.center,
-      spacing: 10,
-      children: _caught
-          .map(
-            (p) => Card(
-              color: const Color(0xFFFFF3C4),
-              child: Padding(
-                padding: const EdgeInsets.all(10),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Image.network(
-                      p.spriteUrl,
-                      width: 72,
-                      height: 72,
-                      filterQuality: FilterQuality.none,
-                      errorBuilder: (context, error, stackTrace) =>
-                          const Icon(Icons.catching_pokemon, size: 60),
-                    ),
-                    const SizedBox(width: 8),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          'GOTCHA! 🎉',
-                          style: TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                        Text(
-                          p.name,
-                          style: GoogleFonts.fredoka(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
+        actionsAlignment: MainAxisAlignment.center,
+        actions: [
+          ElevatedButton.icon(
+            onPressed: () => Navigator.of(dialogContext).pop(),
+            icon: const Icon(Icons.explore_rounded, color: Colors.white),
+            label: Text(
+              'Continue Adventure',
+              style: GoogleFonts.fredoka(fontSize: 18, color: Colors.white),
             ),
-          )
-          .toList(),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -639,6 +714,56 @@ class _ResultStat extends StatelessWidget {
             style: GoogleFonts.nunito(
               fontSize: 12,
               color: AppColors.textSecondary,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _Pokeball extends StatelessWidget {
+  final double size;
+
+  const _Pokeball({required this.size});
+
+  @override
+  Widget build(BuildContext context) {
+    final border = size * 0.075;
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: Colors.white,
+        border: Border.all(color: const Color(0xFF152238), width: border),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x33000000),
+            blurRadius: 12,
+            offset: Offset(0, 7),
+          ),
+        ],
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          Align(
+            alignment: Alignment.topCenter,
+            child: Container(height: size / 2, color: AppColors.primary),
+          ),
+          Container(height: border * 1.15, color: const Color(0xFF152238)),
+          Container(
+            width: size * 0.34,
+            height: size * 0.34,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: Colors.white,
+              border: Border.all(
+                color: const Color(0xFF152238),
+                width: border * 0.8,
+              ),
             ),
           ),
         ],

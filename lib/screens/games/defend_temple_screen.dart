@@ -422,9 +422,9 @@ class _DefendTempleScreenState extends State<DefendTempleScreen>
       context: context,
       barrierDismissible: false,
       builder: (ctx) => QuitDialog(
-        title: 'Leave the Garden?',
+        title: 'Leave the Pokémon Center?',
         message: 'Your current Pokémon Center Guard round will end.',
-        stayLabel: 'Keep Gardening',
+        stayLabel: 'Keep Guarding',
         quitLabel: 'Take a Break',
         stayBadge: 'Esc',
         quitBadge: 'Q',
@@ -538,8 +538,8 @@ class _DefendTempleScreenState extends State<DefendTempleScreen>
             ),
           ),
           const SizedBox(width: 16),
-          // Temple health bar
-          const Text('🌻', style: TextStyle(fontSize: 16)),
+          // Pokémon Center health bar
+          const Text('💗', style: TextStyle(fontSize: 16)),
           const SizedBox(width: 6),
           Expanded(
             child: Container(
@@ -647,7 +647,7 @@ class _DefendTempleScreenState extends State<DefendTempleScreen>
               if (_demons.isEmpty && _ghosts.isEmpty)
                 Center(
                   child: Text(
-                    'Clouds gathering...',
+                    'Pokémon approaching...',
                     style: GoogleFonts.fredoka(
                       fontSize: 24,
                       color: Colors.white24,
@@ -1068,7 +1068,7 @@ class _DefendTempleScreenState extends State<DefendTempleScreen>
                   ? '✗ No match'
                   : hasInput
                   ? _input
-                  : 'Type to clear a cloud...',
+                  : 'Type to guide a Pokémon...',
               style: GoogleFonts.fredoka(
                 fontSize: fontSize,
                 fontWeight: FontWeight.w500,

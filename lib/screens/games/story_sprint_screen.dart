@@ -195,9 +195,9 @@ class _StorySprintScreenState extends State<StorySprintScreen> {
       context: context,
       barrierDismissible: false,
       builder: (ctx) => QuitDialog(
-        title: 'Stop Running?',
+        title: 'Leave the Adventure Trail?',
         message: 'Your current score will be lost.',
-        stayLabel: 'Resume',
+        stayLabel: 'Keep Exploring',
         quitLabel: 'Quit',
         stayBadge: 'Esc',
         quitBadge: 'Q',
