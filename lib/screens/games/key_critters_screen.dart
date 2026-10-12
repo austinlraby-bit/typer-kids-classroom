@@ -12,6 +12,7 @@ import '../../core/theme/app_colors.dart';
 import '../../data/word_lists.dart';
 import '../../providers/progress_provider.dart';
 import '../../widgets/quit_dialog.dart';
+import '../../widgets/pokemon_sprite.dart';
 import 'widgets/key_critters_views.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -556,7 +557,7 @@ class _KeyCrittersScreenState extends State<KeyCrittersScreen> {
                     ),
                   ),
                   const SizedBox(height: 2),
-                  Text(critter.emoji, style: const TextStyle(fontSize: 36)),
+                  const PokemonSprite(50, size: 54),
                 ],
               ),
             ),

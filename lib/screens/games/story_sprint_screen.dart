@@ -13,6 +13,7 @@ import '../../data/sentence_lists.dart';
 import '../../data/word_lists.dart';
 import '../../providers/progress_provider.dart';
 import '../../widgets/quit_dialog.dart';
+import '../../widgets/pokemon_sprite.dart';
 import 'widgets/story_sprint_views.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -434,17 +435,17 @@ class _StorySprintScreenState extends State<StorySprintScreen> {
         child: LayoutBuilder(
           builder: (context, constraints) {
             final trackW = constraints.maxWidth;
-            final pos = (_legProgress * (trackW - 28)).clamp(0.0, trackW - 28);
+            final pos = (_legProgress * (trackW - 48)).clamp(0.0, trackW - 48);
 
             return SizedBox(
-              height: 36,
+              height: 48,
               child: Stack(
                 children: [
                   // Track bed
                   Positioned(
                     left: 0,
                     right: 0,
-                    top: 16,
+                    top: 28,
                     child: Container(
                       height: 8,
                       decoration: BoxDecoration(
@@ -456,7 +457,7 @@ class _StorySprintScreenState extends State<StorySprintScreen> {
                   // Progress fill
                   Positioned(
                     left: 0,
-                    top: 16,
+                    top: 28,
                     child: Container(
                       width: pos + 14,
                       height: 8,
@@ -470,13 +471,10 @@ class _StorySprintScreenState extends State<StorySprintScreen> {
                   AnimatedPositioned(
                     duration: const Duration(milliseconds: 120),
                     left: pos,
-                    top: _stumbled ? 6 : 0,
-                    child: Transform.flip(
-                      flipX: true,
-                      child: Text(
-                        _stumbled ? '🤸' : '🏃',
-                        style: const TextStyle(fontSize: 26),
-                      ),
+                    top: _stumbled ? 8 : 0,
+                    child: Opacity(
+                      opacity: _stumbled ? 0.55 : 1,
+                      child: const PokemonSprite(133, size: 48),
                     ),
                   ),
                   // Finish flag

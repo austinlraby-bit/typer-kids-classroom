@@ -12,6 +12,7 @@ import '../../core/sound_manager.dart';
 import '../../data/word_lists.dart';
 import '../../providers/progress_provider.dart';
 import '../../widgets/quit_dialog.dart';
+import '../../widgets/pokemon_sprite.dart';
 import 'widgets/word_bubbles_models.dart';
 import 'widgets/word_bubbles_views.dart';
 
@@ -606,6 +607,11 @@ class _WordBubblesScreenState extends State<WordBubblesScreen> {
         return Stack(
           clipBehavior: Clip.hardEdge,
           children: [
+            const Positioned(
+              left: 10,
+              bottom: 8,
+              child: Opacity(opacity: .8, child: PokemonSprite(7, size: 92)),
+            ),
             for (final b in _bubbles) _buildBubble(b, areaW, areaH, fontSize),
             // Ghost feedback indicators
             for (final g in _ghosts)

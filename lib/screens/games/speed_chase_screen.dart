@@ -12,6 +12,7 @@ import '../../core/sound_manager.dart';
 import '../../data/word_lists.dart';
 import '../../providers/progress_provider.dart';
 import '../../widgets/quit_dialog.dart';
+import '../../widgets/pokemon_sprite.dart';
 import 'widgets/speed_chase_views.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -478,19 +479,14 @@ class _SpeedChaseScreenState extends State<SpeedChaseScreen> {
           children: [
             // Player track
             _buildTrackLane(
-              '🏎️',
-              'You',
+              78,
+              'Rapidash',
               _playerProgress,
               const Color(0xFF42A5F5),
             ),
             const SizedBox(height: 8),
             // Ghost track
-            _buildTrackLane(
-              '☄️',
-              'Comet',
-              _ghostProgress,
-              Colors.grey.shade400,
-            ),
+            _buildTrackLane(77, 'Ponyta', _ghostProgress, Colors.grey.shade400),
           ],
         ),
       ),
@@ -498,7 +494,7 @@ class _SpeedChaseScreenState extends State<SpeedChaseScreen> {
   }
 
   Widget _buildTrackLane(
-    String emoji,
+    int pokemonId,
     String label,
     double progress,
     Color color,
@@ -520,17 +516,17 @@ class _SpeedChaseScreenState extends State<SpeedChaseScreen> {
           child: LayoutBuilder(
             builder: (context, constraints) {
               final trackW = constraints.maxWidth;
-              final pos = (progress * (trackW - 24)).clamp(0.0, trackW - 24);
+              final pos = (progress * (trackW - 42)).clamp(0.0, trackW - 42);
 
               return SizedBox(
-                height: 30,
+                height: 42,
                 child: Stack(
                   children: [
                     // Track
                     Positioned(
                       left: 0,
                       right: 0,
-                      top: 12,
+                      top: 22,
                       child: Container(
                         height: 6,
                         decoration: BoxDecoration(
@@ -542,7 +538,7 @@ class _SpeedChaseScreenState extends State<SpeedChaseScreen> {
                     // Progress fill
                     Positioned(
                       left: 0,
-                      top: 12,
+                      top: 22,
                       child: Container(
                         width: pos + 12,
                         height: 6,
@@ -556,7 +552,7 @@ class _SpeedChaseScreenState extends State<SpeedChaseScreen> {
                     Positioned(
                       left: pos,
                       top: 0,
-                      child: Text(emoji, style: const TextStyle(fontSize: 22)),
+                      child: PokemonSprite(pokemonId, size: 42),
                     ),
                     // Finish flag
                     Positioned(

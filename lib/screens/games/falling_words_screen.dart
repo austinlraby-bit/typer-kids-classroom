@@ -13,6 +13,7 @@ import '../../core/sound_manager.dart';
 import '../../data/word_lists.dart';
 import '../../providers/progress_provider.dart';
 import '../../widgets/quit_dialog.dart';
+import '../../widgets/pokemon_sprite.dart';
 import 'widgets/falling_words_models.dart';
 import 'widgets/falling_words_views.dart';
 
@@ -717,16 +718,23 @@ class _FallingWordsScreenState extends State<FallingWordsScreen>
                   ),
                 ],
         ),
-        child: isTarget && _input.isNotEmpty
-            ? _buildPartialMatch(word.word, _input, fontSize)
-            : Text(
-                word.word,
-                style: GoogleFonts.fredoka(
-                  fontSize: fontSize,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.white,
-                ),
-              ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            PokemonSprite(isTarget ? 100 : 101, size: fontSize * 1.55),
+            SizedBox(width: fontSize * .25),
+            isTarget && _input.isNotEmpty
+                ? _buildPartialMatch(word.word, _input, fontSize)
+                : Text(
+                    word.word,
+                    style: GoogleFonts.fredoka(
+                      fontSize: fontSize,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white,
+                    ),
+                  ),
+          ],
+        ),
       ),
     );
   }

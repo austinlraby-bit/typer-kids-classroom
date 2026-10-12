@@ -13,6 +13,7 @@ import '../../core/sound_manager.dart';
 import '../../data/word_lists.dart';
 import '../../providers/progress_provider.dart';
 import '../../widgets/quit_dialog.dart';
+import '../../widgets/pokemon_sprite.dart';
 import 'widgets/defend_temple_models.dart';
 import 'widgets/defend_temple_views.dart';
 import 'widgets/temple_painters.dart';
@@ -791,9 +792,15 @@ class _DefendTempleScreenState extends State<DefendTempleScreen>
           ),
         ),
       ),
-      child: CustomPaint(
-        size: Size(double.infinity, height),
-        painter: GardenPainter(damageFlash: _templeDamageFlash),
+      child: Stack(
+        alignment: Alignment.bottomCenter,
+        children: [
+          CustomPaint(
+            size: Size(double.infinity, height),
+            painter: GardenPainter(damageFlash: _templeDamageFlash),
+          ),
+          const Positioned(bottom: 4, child: PokemonSprite(113, size: 82)),
+        ],
       ),
     );
   }
@@ -884,15 +891,9 @@ class _DefendTempleScreenState extends State<DefendTempleScreen>
                   ),
           ),
           const SizedBox(height: 2),
-          // Friendly storm cloud (below the word)
-          Text(
-            const ['🌧️', '🌩️', '🌫️'][demon.colorIndex % 3],
-            style: TextStyle(
-              fontSize: fontSize * 2.5,
-              shadows: [
-                Shadow(color: color.withValues(alpha: 0.8), blurRadius: 10),
-              ],
-            ),
+          PokemonSprite(
+            const [41, 52, 109][demon.colorIndex % 3],
+            size: fontSize * 2.8,
           ),
         ],
       ),
