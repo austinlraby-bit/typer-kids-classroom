@@ -4,8 +4,13 @@
     classToken: null, token: null, student: null, progress: null, pokemon: null, version: 0,
     saveTimer: null, saving: false, saveAgain: false, pendingSnapshot: null,
     sessionId: null, startedAt: null, activeSeconds: 0, lastTick: 0,
-    lastKey: 0, activity: 'Pokémon Typing Adventure', activityTimer: null
+    lastKey: 0, activity: 'home', activityTimer: null, activitySaveTimer: null,
+    weekly: {weeklySeconds: 0, weeklyGoalMinutes: 30}
   };
+  const QUALIFYING_ACTIVITIES = new Set([
+    'lesson', 'falling-words', 'word-bubbles', 'speed-chase',
+    'defend-temple', 'key-critters', 'story-sprint', 'sandbox', 'typing-test'
+  ]);
   const $ = id => document.getElementById(id);
   let appOrigin = '';
   try { appOrigin = new URL(window.TYPER_KIDS_URL).origin; } catch (_) {}
@@ -94,6 +99,7 @@
       state.student = r.student;
       state.progress = r.progress;
       state.pokemon = r.pokemon || {};
+      state.weekly = r.activity || state.weekly;
       state.version = Number(r.progress && r.progress.version || 0);
       $('login-pin').value = '';
       $('login-pin-confirm').value = '';
@@ -113,7 +119,7 @@
   function sendSession() {
     const frame = $('typer-frame').contentWindow;
     if (!frame) return;
-    frame.postMessage(JSON.stringify({type: 'classroom-session', student: state.student, progress: state.progress, pokemon: state.pokemon}), appOrigin);
+    frame.postMessage(JSON.stringify({type: 'classroom-session', student: state.student, progress: state.progress, pokemon: state.pokemon, activity: state.weekly}), appOrigin);
   }
   function queueSave(snapshot) {
     state.pendingSnapshot = snapshot;
@@ -175,7 +181,7 @@
     const now = performance.now();
     const delta = Math.min(2, Math.max(0, (now - state.lastTick) / 1000));
     state.lastTick = now;
-    if (state.token && !document.hidden && state.lastKey && now - state.lastKey < 30000) state.activeSeconds += delta;
+    if (state.token && QUALIFYING_ACTIVITIES.has(state.activity) && !document.hidden && state.lastKey && now - state.lastKey < 30000) state.activeSeconds += delta;
   }
   async function flushActivity() {
     if (!state.token || !state.sessionId || state.activeSeconds < 1) return;
@@ -190,6 +196,11 @@
         state.pokemon = r.pokemon;
         const frame = $('typer-frame').contentWindow;
         if (frame) frame.postMessage(JSON.stringify({type:'pokemon-update', pokemon:state.pokemon}), appOrigin);
+      }
+      if (r && r.activity) {
+        state.weekly = r.activity;
+        const frame = $('typer-frame').contentWindow;
+        if (frame) frame.postMessage(JSON.stringify({type:'activity-update', activity:state.weekly}), appOrigin);
       }
     } catch (_) {}
   }
@@ -234,7 +245,12 @@
     if (data.type === 'typer-ready') sendSession();
     if (data.type === 'typer-save') queueSave(data.snapshot || {});
     if (data.type === 'typer-activity') state.lastKey = performance.now();
-    if (data.type === 'typer-context') state.activity = String(data.activity || 'Pokémon Typing Adventure').slice(0, 80);
+    if (data.type === 'typer-context') {
+      const priorQualified = QUALIFYING_ACTIVITIES.has(state.activity);
+      state.activity = String(data.activity || 'home').slice(0, 80);
+      state.lastKey = 0;
+      if (priorQualified && !QUALIFYING_ACTIVITIES.has(state.activity)) flushActivity();
+    }
     if (data.type === 'typer-logout') logout();
     if (data.type === 'pokemon-claim' || data.type === 'pokemon-preferences') pokemonRequest(data);
   });

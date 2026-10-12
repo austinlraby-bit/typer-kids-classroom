@@ -25,6 +25,25 @@ import '../../screens/test/typing_test_screen.dart';
 import '../../screens/typing_screen.dart';
 import '../../screens/pokemon_adventure_screen.dart';
 import '../../widgets/home_row_gate.dart';
+import '../../classroom/classroom_bridge.dart';
+
+class _ActivityRouteObserver extends NavigatorObserver {
+  void _report(Route<dynamic>? route) {
+    ClassroomBridge.instance.setActivity(route?.settings.name ?? 'home');
+  }
+
+  @override
+  void didPush(Route<dynamic> route, Route<dynamic>? previousRoute) =>
+      _report(route);
+
+  @override
+  void didPop(Route<dynamic> route, Route<dynamic>? previousRoute) =>
+      _report(previousRoute);
+
+  @override
+  void didReplace({Route<dynamic>? newRoute, Route<dynamic>? oldRoute}) =>
+      _report(newRoute);
+}
 
 /// Centralized router configuration using go_router.
 ///
@@ -43,6 +62,7 @@ class AppRouter {
   AppRouter._();
 
   static final _rootNavigatorKey = GlobalKey<NavigatorState>();
+  static final _activityObserver = _ActivityRouteObserver();
 
   /// Resolve a lesson ID to a lesson — either from the curriculum or, for
   /// the special tricky-keys ID, generated from the profile's missed keys.
@@ -62,6 +82,7 @@ class AppRouter {
     navigatorKey: _rootNavigatorKey,
     initialLocation: '/',
     refreshListenable: profileProvider,
+    observers: [_activityObserver],
     redirect: (context, state) {
       final profileProv = Provider.of<ProfileProvider>(context, listen: false);
       final hasActive = profileProv.hasActiveProfile;

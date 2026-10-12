@@ -38,32 +38,64 @@ function saveActivity(token, request) {
     const sessionId = validateId_(request.sessionId, 'session');
     const seconds = Math.max(0, Math.min(86400, Math.floor(Number(request.activeSeconds) || 0)));
     const activity = String(request.activity || 'typing').slice(0, 80);
-    const startedAt = new Date(request.startedAt);
-    const date = isNaN(startedAt.getTime()) ? new Date() : startedAt;
+    const now = new Date();
     const lock = LockService.getScriptLock();
     lock.waitLock(KQ.LOCK_WAIT_MS);
     try {
       const sheet = getSpreadsheet_().getSheetByName(KQ.SESSIONS);
       const row = sessionRow_(sheet, sessionId);
       if (row) {
-        const current = Number(sheet.getRange(row, 4).getValue()) || 0;
-        const accepted = Math.min(seconds, current + 90);
+        const values = sheet.getRange(row, 1, 1, 7).getValues()[0];
+        if (String(values[1]) !== auth.studentId) throw new Error('That activity session does not belong to this student.');
+        const current = Number(values[3]) || 0;
+        const lastUpdate = values[5] instanceof Date ? values[5] : now;
+        const serverElapsed = Math.max(0, (now.getTime() - lastUpdate.getTime()) / 1000);
+        const accepted = Math.min(seconds, current + Math.min(90, Math.floor(serverElapsed) + 5));
         if (accepted > current) {
-          sheet.getRange(row, 4, 1, 2).setValues([[accepted, activity]]);
+          sheet.getRange(row, 4, 1, 4).setValues([[accepted, activity, now, seconds]]);
           creditPokemonPractice_(auth.studentId, accepted - current);
         }
       } else {
-        const accepted = Math.min(seconds, 90);
-        sheet.appendRow([sessionId, auth.studentId, date, accepted, activity]);
+        const recent = recentActivitySession_(sheet, auth.studentId, now);
+        if (recent && recent !== sessionId) throw new Error('Another activity session is already active for this student.');
+        const accepted = Math.min(seconds, 65);
+        sheet.appendRow([sessionId, auth.studentId, now, accepted, activity, now, seconds]);
         creditPokemonPractice_(auth.studentId, accepted);
       }
-      return { ok: true, activeSeconds: seconds, pokemon: loadPokemonState_(auth.studentId) };
+      return { ok: true, activeSeconds: seconds, pokemon: loadPokemonState_(auth.studentId), activity: weeklyActivity_(auth.studentId) };
     } finally {
       lock.releaseLock();
     }
   } catch (err) {
     return { ok: false, error: publicError_(err) };
   }
+}
+
+function recentActivitySession_(sheet, studentId, now) {
+  const lastRow = sheet.getLastRow();
+  if (lastRow < 2) return '';
+  const first = Math.max(2, lastRow - 499);
+  const rows = sheet.getRange(first, 1, lastRow - first + 1, 6).getValues();
+  for (let i = rows.length - 1; i >= 0; i--) {
+    if (String(rows[i][1]) !== studentId || !(rows[i][5] instanceof Date)) continue;
+    if (now.getTime() - rows[i][5].getTime() < 120000) return String(rows[i][0]);
+  }
+  return '';
+}
+
+function weeklyActivity_(studentId) {
+  const sheet = getSpreadsheet_().getSheetByName(KQ.SESSIONS);
+  const now = new Date();
+  const monday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  monday.setDate(monday.getDate() - ((monday.getDay() + 6) % 7));
+  let seconds = 0;
+  if (sheet && sheet.getLastRow() >= 2) {
+    const rows = sheet.getRange(2, 2, sheet.getLastRow() - 1, 3).getValues();
+    rows.forEach(r => {
+      if (String(r[0]) === studentId && r[1] instanceof Date && r[1] >= monday) seconds += Math.max(0, Number(r[2]) || 0);
+    });
+  }
+  return { weeklySeconds: Math.floor(seconds), weeklyGoalMinutes: weeklyGoal_() };
 }
 
 function loadProgress_(studentId, name) {

@@ -5,6 +5,7 @@ class ClassroomSession {
   final int version;
   final Map<String, dynamic> snapshot;
   final Map<String, dynamic> pokemon;
+  final Map<String, dynamic> activity;
 
   const ClassroomSession({
     required this.studentId,
@@ -13,12 +14,14 @@ class ClassroomSession {
     required this.version,
     required this.snapshot,
     required this.pokemon,
+    this.activity = const {},
   });
 }
 
 class ClassroomBridge {
   ClassroomBridge._();
   static final instance = ClassroomBridge._();
+  void Function(Map<String, dynamic>)? onActivityUpdate;
 
   bool get requested => false;
   void Function(Map<String, dynamic>)? onPokemonUpdate;

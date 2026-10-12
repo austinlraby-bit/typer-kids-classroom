@@ -12,6 +12,7 @@ class ClassroomSession {
   final int version;
   final Map<String, dynamic> snapshot;
   final Map<String, dynamic> pokemon;
+  final Map<String, dynamic> activity;
 
   const ClassroomSession({
     required this.studentId,
@@ -20,13 +21,19 @@ class ClassroomSession {
     required this.version,
     required this.snapshot,
     required this.pokemon,
+    required this.activity,
   });
 }
 
 class ClassroomBridge {
   ClassroomBridge._() {
     html.window.onMessage.listen(_onMessage);
-    html.window.onKeyDown.listen((_) => _send({'type': 'typer-activity'}));
+    html.window.onKeyDown.listen((event) {
+      final key = event.key ?? '';
+      if (event.repeat != true && (key.length == 1 || key == 'Backspace')) {
+        _send({'type': 'typer-activity'});
+      }
+    });
   }
 
   static final instance = ClassroomBridge._();
@@ -35,6 +42,7 @@ class ClassroomBridge {
   Map<String, dynamic>? _pendingSnapshot;
   final Map<String, Completer<Map<String, dynamic>>> _requests = {};
   void Function(Map<String, dynamic>)? onPokemonUpdate;
+  void Function(Map<String, dynamic>)? onActivityUpdate;
 
   bool get requested => Uri.base.queryParameters['classroom'] == '1';
 
@@ -70,6 +78,12 @@ class ClassroomBridge {
         );
         return;
       }
+      if (message['type'] == 'activity-update') {
+        onActivityUpdate?.call(
+          (message['activity'] as Map?)?.cast<String, dynamic>() ?? {},
+        );
+        return;
+      }
       if (message['type'] != 'classroom-session' ||
           _sessionCompleter.isCompleted) {
         return;
@@ -90,6 +104,8 @@ class ClassroomBridge {
           version: (progress['version'] as num?)?.toInt() ?? 0,
           snapshot: snapshot,
           pokemon: (message['pokemon'] as Map?)?.cast<String, dynamic>() ?? {},
+          activity:
+              (message['activity'] as Map?)?.cast<String, dynamic>() ?? {},
         ),
       );
     } catch (_) {

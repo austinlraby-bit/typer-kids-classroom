@@ -100,7 +100,7 @@ function login(classToken, studentId, pin) {
     const session = { studentId: found.id, name: found.name, issued: Date.now() };
     CacheService.getScriptCache().put('auth:' + digest_(token), JSON.stringify(session), KQ.SESSION_TTL);
     const progress = loadProgress_(found.id, found.name);
-    return { ok: true, token: token, student: { id: found.id, name: found.name }, progress: progress, pokemon: loadPokemonState_(found.id) };
+    return { ok: true, token: token, student: { id: found.id, name: found.name }, progress: progress, pokemon: loadPokemonState_(found.id), activity: weeklyActivity_(found.id) };
   } catch (err) {
     return { ok: false, error: publicError_(err) };
   }

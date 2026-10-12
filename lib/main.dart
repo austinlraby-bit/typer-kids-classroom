@@ -9,6 +9,7 @@ import 'core/theme/app_theme.dart';
 import 'providers/profile_provider.dart';
 import 'providers/progress_provider.dart';
 import 'providers/pokemon_provider.dart';
+import 'providers/on_task_provider.dart';
 import 'classroom/classroom_bridge.dart';
 
 void main() async {
@@ -49,6 +50,7 @@ void main() async {
   SoundManager().enabled = prefs.getBool(SoundManager.prefsKey) ?? true;
 
   final pokemonProvider = PokemonProvider(classroomSession.pokemon);
+  final onTaskProvider = OnTaskProvider(classroomSession.activity);
   await pokemonProvider.load();
 
   runApp(
@@ -56,6 +58,7 @@ void main() async {
       profileProvider: profileProvider,
       progressProvider: progressProvider,
       pokemonProvider: pokemonProvider,
+      onTaskProvider: onTaskProvider,
     ),
   );
 }
@@ -104,12 +107,14 @@ class TyperKidsApp extends StatelessWidget {
   final ProfileProvider profileProvider;
   final ProgressProvider progressProvider;
   final PokemonProvider pokemonProvider;
+  final OnTaskProvider onTaskProvider;
 
   const TyperKidsApp({
     super.key,
     required this.profileProvider,
     required this.progressProvider,
     required this.pokemonProvider,
+    required this.onTaskProvider,
   });
 
   @override
@@ -119,6 +124,7 @@ class TyperKidsApp extends StatelessWidget {
         ChangeNotifierProvider.value(value: profileProvider),
         ChangeNotifierProvider.value(value: progressProvider),
         ChangeNotifierProvider.value(value: pokemonProvider),
+        ChangeNotifierProvider.value(value: onTaskProvider),
       ],
       child: MaterialApp.router(
         title: 'Pokémon Typing Adventure',

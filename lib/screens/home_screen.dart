@@ -9,6 +9,7 @@ import '../data/practice_generator.dart';
 import '../providers/profile_provider.dart';
 import '../providers/progress_provider.dart';
 import '../providers/pokemon_provider.dart';
+import '../providers/on_task_provider.dart';
 import '../classroom/classroom_bridge.dart';
 import '../widgets/home/activity_card.dart';
 import '../widgets/home/badges_panel.dart';
@@ -134,6 +135,8 @@ class _HomeScreenState extends State<HomeScreen> {
                         _buildHeader(context),
                         const SizedBox(height: 24),
                         _buildMascotGreeting(progress),
+                        const SizedBox(height: 16),
+                        _buildWeeklyOnTask(context),
                         const SizedBox(height: 16),
                         _buildRegionSwitcher(context, progress),
                         const SizedBox(height: 28),
@@ -377,6 +380,82 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
             ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildWeeklyOnTask(BuildContext context) {
+    final activity = context.watch<OnTaskProvider>();
+    final goalSeconds = activity.weeklyGoalMinutes * 60;
+    final progress = goalSeconds > 0
+        ? (activity.weeklySeconds / goalSeconds).clamp(0.0, 1.0)
+        : 0.0;
+    final minutes = activity.weeklySeconds ~/ 60;
+    final seconds = activity.weeklySeconds % 60;
+    final time = minutes > 0
+        ? '$minutes min ${seconds.toString().padLeft(2, '0')} sec'
+        : '$seconds sec';
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xFFEAF2FF), Color(0xFFFFF7D6)],
+        ),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: AppColors.secondary.withValues(alpha: 0.3)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Text('⏱️', style: TextStyle(fontSize: 28)),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Weekly On-Task Time',
+                      style: GoogleFonts.fredoka(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                    Text(
+                      'Active typing only • resets each Monday',
+                      style: GoogleFonts.nunito(
+                        fontSize: 13,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Text(
+                '$time / ${activity.weeklyGoalMinutes} min',
+                style: GoogleFonts.fredoka(
+                  fontSize: 17,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.secondary,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(8),
+            child: LinearProgressIndicator(
+              value: progress,
+              minHeight: 14,
+              backgroundColor: Colors.white,
+              color: progress >= 1 ? AppColors.correct : AppColors.secondary,
+            ),
+          ),
         ],
       ),
     );

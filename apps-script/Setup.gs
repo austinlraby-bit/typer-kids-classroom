@@ -10,7 +10,7 @@ function setupKeyQuest() {
   }
   setupSheet_(ss, KQ.STUDENTS, ['Student ID', 'First Name', 'Last Initial', 'PIN', 'Active']);
   setupSheet_(ss, KQ.PROGRESS, ['Student ID', 'Current Lesson', 'Completed Lessons', 'Best WPM', 'Accuracy', 'Progress Data']);
-  const sessions = setupSheet_(ss, KQ.SESSIONS, ['Session ID', 'Student ID', 'Date', 'Active Seconds', 'Activity']);
+  const sessions = setupSheet_(ss, KQ.SESSIONS, ['Session ID', 'Student ID', 'Date', 'Active Seconds', 'Activity', 'Last Server Update', 'Last Reported Seconds']);
   sessions.getRange('C:C').setNumberFormat('yyyy-mm-dd hh:mm');
   const summary = setupSheet_(ss, KQ.SUMMARY, ['Student']);
   const settings = setupSheet_(ss, KQ.SETTINGS, ['Setting', 'Value']);
