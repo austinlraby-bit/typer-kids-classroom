@@ -6,6 +6,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../data/word_lists.dart';
 import '../../../widgets/difficulty_card.dart';
 import '../../../widgets/stat_tiles.dart';
+import '../../../widgets/pokemon_sprite.dart';
 
 /// Difficulty-selection menu shown before a Speed Chase race starts.
 class SpeedChaseMenu extends StatelessWidget {
@@ -95,10 +96,7 @@ class SpeedChaseMenu extends StatelessWidget {
                           ),
                         ),
                         SizedBox(height: isTall ? 16 : 8),
-                        Text(
-                          '🏎️',
-                          style: TextStyle(fontSize: isTall ? 56 : 36),
-                        ),
+                        PokemonSprite(78, size: isTall ? 76 : 56),
                         SizedBox(height: isTall ? 8 : 4),
                         Text(
                           'Rapidash Race',

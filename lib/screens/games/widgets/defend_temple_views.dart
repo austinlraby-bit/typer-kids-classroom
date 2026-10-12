@@ -6,6 +6,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../data/word_lists.dart';
 import '../../../widgets/difficulty_card.dart';
 import '../../../widgets/stat_tiles.dart';
+import '../../../widgets/pokemon_sprite.dart';
 
 const _bgTop = Color(0xFF05031A);
 
@@ -106,7 +107,7 @@ class DefendTempleMenu extends StatelessWidget {
                         ),
                         SizedBox(height: isTall ? 12 : 6),
                         // Header
-                        Text('🌻', style: TextStyle(fontSize: emojiSize)),
+                        PokemonSprite(113, size: emojiSize + 18),
                         SizedBox(height: isTall ? 8 : 4),
                         Text(
                           'Pokémon Center Guard',

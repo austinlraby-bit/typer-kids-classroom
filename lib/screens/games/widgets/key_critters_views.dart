@@ -6,6 +6,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../data/word_lists.dart';
 import '../../../widgets/difficulty_card.dart';
 import '../../../widgets/stat_tiles.dart';
+import '../../../widgets/pokemon_sprite.dart';
 
 const _accent = Color(0xFF43A047);
 
@@ -99,10 +100,7 @@ class KeyCrittersMenu extends StatelessWidget {
                           ),
                         ),
                         SizedBox(height: isTall ? 16 : 8),
-                        Text(
-                          '🐹',
-                          style: TextStyle(fontSize: isTall ? 56 : 36),
-                        ),
+                        PokemonSprite(50, size: isTall ? 76 : 56),
                         SizedBox(height: isTall ? 8 : 4),
                         Text(
                           'Diglett’s Digging Game',

@@ -5,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../widgets/shortcut_badge.dart';
+import '../../widgets/pokemon_sprite.dart';
 
 /// Menu screen listing available typing games.
 class GameMenuScreen extends StatefulWidget {
@@ -74,7 +75,7 @@ class _GameMenuScreenState extends State<GameMenuScreen> {
 
               final gameCards = <Widget>[
                 _GameCard(
-                  emoji: '🌻',
+                  pokemonId: 113,
                   title: 'Pokémon Center Guard',
                   description:
                       'Clear the storm clouds before they reach the garden!',
@@ -84,7 +85,7 @@ class _GameMenuScreenState extends State<GameMenuScreen> {
                   onTap: () => context.push('/games/defend-temple'),
                 ),
                 _GameCard(
-                  emoji: '⬇️',
+                  pokemonId: 25,
                   title: 'Poké Ball Rescue',
                   description: 'Type the words before they reach the bottom!',
                   shortcut: '2',
@@ -93,7 +94,7 @@ class _GameMenuScreenState extends State<GameMenuScreen> {
                   onTap: () => context.push('/games/falling-words'),
                 ),
                 _GameCard(
-                  emoji: '🫧',
+                  pokemonId: 7,
                   title: 'Squirtle’s Bubble Challenge',
                   description: 'Pop the floating bubbles by typing the words!',
                   shortcut: '3',
@@ -102,7 +103,7 @@ class _GameMenuScreenState extends State<GameMenuScreen> {
                   onTap: () => context.push('/games/word-bubbles'),
                 ),
                 _GameCard(
-                  emoji: '🏎️',
+                  pokemonId: 78,
                   title: 'Rapidash Race',
                   description: 'Type words faster than the comet racer!',
                   shortcut: '4',
@@ -111,7 +112,7 @@ class _GameMenuScreenState extends State<GameMenuScreen> {
                   onTap: () => context.push('/games/speed-chase'),
                 ),
                 _GameCard(
-                  emoji: '🐹',
+                  pokemonId: 50,
                   title: 'Diglett’s Digging Game',
                   description: 'Help the critters by pressing their keys!',
                   shortcut: '5',
@@ -120,7 +121,7 @@ class _GameMenuScreenState extends State<GameMenuScreen> {
                   onTap: () => context.push('/games/key-critters'),
                 ),
                 _GameCard(
-                  emoji: '🏃',
+                  pokemonId: 133,
                   title: 'Pokémon Dash',
                   description: 'Type full sentences to sprint down the track!',
                   shortcut: '6',
@@ -167,7 +168,7 @@ class _GameMenuScreenState extends State<GameMenuScreen> {
                         ),
                         SizedBox(height: isTall ? 12 : 6),
                         // Header
-                        Text('🎮', style: TextStyle(fontSize: emojiSize)),
+                        PokemonSprite(25, size: emojiSize + 18),
                         SizedBox(height: isTall ? 8 : 4),
                         Text(
                           'Typing Games',
@@ -230,7 +231,7 @@ class _GameMenuScreenState extends State<GameMenuScreen> {
 // ─────────────────────────────────────────────────────────────────────────────
 
 class _GameCard extends StatelessWidget {
-  final String emoji;
+  final int pokemonId;
   final String title;
   final String description;
   final String shortcut;
@@ -239,7 +240,7 @@ class _GameCard extends StatelessWidget {
   final VoidCallback onTap;
 
   const _GameCard({
-    required this.emoji,
+    required this.pokemonId,
     required this.title,
     required this.description,
     required this.shortcut,
@@ -277,7 +278,7 @@ class _GameCard extends StatelessWidget {
           ),
           child: Row(
             children: [
-              Text(emoji, style: TextStyle(fontSize: emojiSize)),
+              PokemonSprite(pokemonId, size: emojiSize + 18),
               SizedBox(width: compact ? 10 : 16),
               Expanded(
                 child: Column(

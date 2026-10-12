@@ -14,6 +14,7 @@ import '../widgets/home/activity_card.dart';
 import '../widgets/home/badges_panel.dart';
 import '../widgets/home/stat_card.dart';
 import '../widgets/shortcut_badge.dart';
+import '../widgets/pokemon_sprite.dart';
 
 /// The main home screen with fun kid-friendly design
 class HomeScreen extends StatefulWidget {
@@ -161,7 +162,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildHeader(BuildContext context) {
     return Column(
       children: [
-        const Text('🔴', style: TextStyle(fontSize: 56)),
+        const PokemonSprite(25, size: 88),
         const SizedBox(height: 6),
         Text(
           'Pokémon Typing Adventure',

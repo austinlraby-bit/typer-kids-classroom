@@ -5,6 +5,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../data/word_lists.dart';
 import '../../../widgets/difficulty_card.dart';
 import '../../../widgets/stat_tiles.dart';
+import '../../../widgets/pokemon_sprite.dart';
 
 /// Difficulty-selection menu shown before a Falling Words game starts.
 class FallingWordsMenu extends StatelessWidget {
@@ -84,7 +85,7 @@ class FallingWordsMenu extends StatelessWidget {
                           ),
                         ),
                         SizedBox(height: isTall ? 16 : 8),
-                        Text('⬇️', style: TextStyle(fontSize: emojiSize)),
+                        PokemonSprite(25, size: emojiSize + 18),
                         SizedBox(height: isTall ? 8 : 4),
                         Text(
                           'Poké Ball Rescue',
