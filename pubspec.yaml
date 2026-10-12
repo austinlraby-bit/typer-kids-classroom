@@ -46,6 +46,7 @@ flutter:
 
   assets:
     - assets/sounds/
+    - assets/data/
     - assets/app_icon.png
   #   - family: Schyler
   #     fonts:

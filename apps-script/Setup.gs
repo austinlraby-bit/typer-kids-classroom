@@ -18,14 +18,31 @@ function setupKeyQuest() {
     ['Weekly goal (minutes)', KQ.DEFAULT_GOAL_MINUTES],
     ['Week starts', 'Monday']
   ]);
+  if (!settingExists_(settings, 'Pokémon encounter (minutes)')) {
+    settings.appendRow(['Pokémon encounter (minutes)', KQ.DEFAULT_PRACTICE_MINUTES]);
+  }
+  if (!settingExists_(settings, 'Region thresholds')) {
+    settings.appendRow(['Region thresholds', '0,15,35,60,90,120,150,185,220']);
+  }
+  setupSheet_(ss, KQ.POKEMON, [
+    'Student ID', 'Caught JSON', 'Selected Region', 'Companion ID',
+    'Practice Seconds', 'Unclaimed Encounters', 'Transactions JSON',
+    'Accuracy Records JSON', 'Updated At'
+  ]);
   createWeeklySummary_();
-  [KQ.STUDENTS, KQ.PROGRESS, KQ.SESSIONS, KQ.SUMMARY, KQ.SETTINGS].forEach(name => {
+  [KQ.STUDENTS, KQ.PROGRESS, KQ.SESSIONS, KQ.SUMMARY, KQ.SETTINGS, KQ.POKEMON].forEach(name => {
     const sh = ss.getSheetByName(name);
     sh.setFrozenRows(1);
     sh.getRange(1, 1, 1, sh.getLastColumn()).setFontWeight('bold').setBackground('#4f6df5').setFontColor('#ffffff');
     sh.autoResizeColumns(1, sh.getLastColumn());
   });
   return 'KeyQuest is ready: ' + ss.getUrl();
+}
+
+function settingExists_(sheet, name) {
+  if (!sheet || sheet.getLastRow() < 2) return false;
+  return !!sheet.getRange(2, 1, sheet.getLastRow() - 1, 1)
+    .createTextFinder(name).matchEntireCell(true).findNext();
 }
 
 function setupSheet_(ss, name, headers) {

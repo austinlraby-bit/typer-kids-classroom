@@ -422,7 +422,7 @@ class _DefendTempleScreenState extends State<DefendTempleScreen>
       barrierDismissible: false,
       builder: (ctx) => QuitDialog(
         title: 'Leave the Garden?',
-        message: 'Your current Garden Guard round will end.',
+        message: 'Your current Pokémon Center Guard round will end.',
         stayLabel: 'Keep Gardening',
         quitLabel: 'Take a Break',
         stayBadge: 'Esc',

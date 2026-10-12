@@ -8,6 +8,7 @@ import '../core/theme/app_colors.dart';
 import '../data/practice_generator.dart';
 import '../providers/profile_provider.dart';
 import '../providers/progress_provider.dart';
+import '../providers/pokemon_provider.dart';
 import '../classroom/classroom_bridge.dart';
 import '../widgets/home/activity_card.dart';
 import '../widgets/home/badges_panel.dart';
@@ -50,6 +51,8 @@ class _HomeScreenState extends State<HomeScreen> {
       _openTypingTest();
     } else if (key == LogicalKeyboardKey.keyK) {
       _openTrickyKeys();
+    } else if (key == LogicalKeyboardKey.keyD) {
+      context.push('/adventure');
     }
   }
 
@@ -158,10 +161,10 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildHeader(BuildContext context) {
     return Column(
       children: [
-        const Text('🐵', style: TextStyle(fontSize: 56)),
+        const Text('🔴', style: TextStyle(fontSize: 56)),
         const SizedBox(height: 6),
         Text(
-          'Typer Kids',
+          'Pokémon Typing Adventure',
           style: GoogleFonts.fredoka(
             fontSize: 44,
             fontWeight: FontWeight.w700,
@@ -177,7 +180,7 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
         const SizedBox(height: 2),
         Text(
-          'Learn to Type with Fun! 🎮',
+          'Type, explore, and fill your Pokédex!',
           style: GoogleFonts.fredoka(
             fontSize: 18,
             fontWeight: FontWeight.w400,
@@ -355,6 +358,15 @@ class _HomeScreenState extends State<HomeScreen> {
   }) {
     final trickyKeys = progress.trickyKeys;
     final cards = [
+      ActivityCard(
+        emoji: '🔴',
+        title: 'Pokémon Adventure',
+        subtitle:
+            '${context.watch<PokemonProvider>().caught.length} caught · Explore your Pokédex',
+        shortcut: 'D',
+        color: const Color(0xFFE84B4B),
+        onTap: () => context.push('/adventure'),
+      ),
       ActivityCard(
         emoji: '🎮',
         title: 'Typing Games',

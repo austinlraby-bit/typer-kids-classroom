@@ -87,7 +87,7 @@ class FallingWordsMenu extends StatelessWidget {
                         Text('⬇️', style: TextStyle(fontSize: emojiSize)),
                         SizedBox(height: isTall ? 8 : 4),
                         Text(
-                          'Falling Words',
+                          'Poké Ball Rescue',
                           style: GoogleFonts.fredoka(
                             fontSize: headerFontSize,
                             fontWeight: FontWeight.w700,

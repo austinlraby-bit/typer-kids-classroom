@@ -171,13 +171,13 @@ class _TypingScreenState extends State<TypingScreen> {
     }
   }
 
-  void _navigateToResults() {
+  Future<void> _navigateToResults() async {
     final stats = _typingProvider.stats;
     final progressProvider = Provider.of<ProgressProvider>(
       context,
       listen: false,
     );
-    progressProvider.recordAttempt(widget.lesson, stats);
+    await progressProvider.recordAttempt(widget.lesson, stats);
     _sfx.playCelebration();
 
     Future.delayed(const Duration(milliseconds: 300), () {

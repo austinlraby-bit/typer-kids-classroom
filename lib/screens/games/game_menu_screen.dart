@@ -75,7 +75,7 @@ class _GameMenuScreenState extends State<GameMenuScreen> {
               final gameCards = <Widget>[
                 _GameCard(
                   emoji: '🌻',
-                  title: 'Garden Guard',
+                  title: 'Pokémon Center Guard',
                   description:
                       'Clear the storm clouds before they reach the garden!',
                   shortcut: '1',
@@ -85,7 +85,7 @@ class _GameMenuScreenState extends State<GameMenuScreen> {
                 ),
                 _GameCard(
                   emoji: '⬇️',
-                  title: 'Falling Words',
+                  title: 'Poké Ball Rescue',
                   description: 'Type the words before they reach the bottom!',
                   shortcut: '2',
                   color: AppColors.primary,
@@ -94,7 +94,7 @@ class _GameMenuScreenState extends State<GameMenuScreen> {
                 ),
                 _GameCard(
                   emoji: '🫧',
-                  title: 'Word Bubbles',
+                  title: 'Squirtle’s Bubble Challenge',
                   description: 'Pop the floating bubbles by typing the words!',
                   shortcut: '3',
                   color: const Color(0xFF26C6DA),
@@ -103,7 +103,7 @@ class _GameMenuScreenState extends State<GameMenuScreen> {
                 ),
                 _GameCard(
                   emoji: '🏎️',
-                  title: 'Speed Chase',
+                  title: 'Rapidash Race',
                   description: 'Type words faster than the comet racer!',
                   shortcut: '4',
                   color: const Color(0xFFE53935),
@@ -112,7 +112,7 @@ class _GameMenuScreenState extends State<GameMenuScreen> {
                 ),
                 _GameCard(
                   emoji: '🐹',
-                  title: 'Key Critters',
+                  title: 'Diglett’s Digging Game',
                   description: 'Help the critters by pressing their keys!',
                   shortcut: '5',
                   color: const Color(0xFF43A047),
@@ -121,7 +121,7 @@ class _GameMenuScreenState extends State<GameMenuScreen> {
                 ),
                 _GameCard(
                   emoji: '🏃',
-                  title: 'Story Sprint',
+                  title: 'Pokémon Dash',
                   description: 'Type full sentences to sprint down the track!',
                   shortcut: '6',
                   color: const Color(0xFFFB8C00),

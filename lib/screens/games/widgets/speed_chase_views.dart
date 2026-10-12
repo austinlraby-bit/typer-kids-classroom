@@ -101,7 +101,7 @@ class SpeedChaseMenu extends StatelessWidget {
                         ),
                         SizedBox(height: isTall ? 8 : 4),
                         Text(
-                          'Speed Chase',
+                          'Rapidash Race',
                           style: GoogleFonts.fredoka(
                             fontSize: isWide ? 34 : 26,
                             fontWeight: FontWeight.w700,

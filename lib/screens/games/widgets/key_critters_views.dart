@@ -105,7 +105,7 @@ class KeyCrittersMenu extends StatelessWidget {
                         ),
                         SizedBox(height: isTall ? 8 : 4),
                         Text(
-                          'Key Critters',
+                          'Diglett’s Digging Game',
                           style: GoogleFonts.fredoka(
                             fontSize: isWide ? 34 : 26,
                             fontWeight: FontWeight.w700,

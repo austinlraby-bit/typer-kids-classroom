@@ -1,7 +1,7 @@
 <script>
 (() => {
   const state = {
-    classToken: null, token: null, student: null, progress: null, version: 0,
+    classToken: null, token: null, student: null, progress: null, pokemon: null, version: 0,
     saveTimer: null, saving: false, saveAgain: false, pendingSnapshot: null,
     sessionId: null, startedAt: null, activeSeconds: 0, lastTick: 0,
     lastKey: 0, activity: 'Typer Kids', activityTimer: null
@@ -93,6 +93,7 @@
       state.token = r.token;
       state.student = r.student;
       state.progress = r.progress;
+      state.pokemon = r.pokemon || {};
       state.version = Number(r.progress && r.progress.version || 0);
       $('login-pin').value = '';
       $('login-pin-confirm').value = '';
@@ -112,7 +113,7 @@
   function sendSession() {
     const frame = $('typer-frame').contentWindow;
     if (!frame) return;
-    frame.postMessage(JSON.stringify({type: 'classroom-session', student: state.student, progress: state.progress}), appOrigin);
+    frame.postMessage(JSON.stringify({type: 'classroom-session', student: state.student, progress: state.progress, pokemon: state.pokemon}), appOrigin);
   }
   function queueSave(snapshot) {
     state.pendingSnapshot = snapshot;
@@ -154,6 +155,14 @@
       }
     }
   }
+  async function flushAllProgress() {
+    await flushSave();
+    for (let i = 0; i < 40 && (state.saving || state.pendingSnapshot); i++) {
+      await new Promise(resolve => setTimeout(resolve, 100));
+      if (!state.saving && state.pendingSnapshot) await flushSave();
+    }
+    if (state.saving || state.pendingSnapshot) throw new Error('Your progress is still saving. Please try the encounter again.');
+  }
   function startActivity() {
     state.sessionId = uuid(); state.startedAt = new Date().toISOString();
     state.activeSeconds = 0; state.lastTick = performance.now(); state.lastKey = 0;
@@ -171,13 +180,36 @@
   async function flushActivity() {
     if (!state.token || !state.sessionId || state.activeSeconds < 1) return;
     try {
-      await call('saveActivity', state.token, {
+      const r = await call('saveActivity', state.token, {
         sessionId: state.sessionId,
         activeSeconds: Math.floor(state.activeSeconds),
         activity: state.activity,
         startedAt: state.startedAt
       });
+      if (r && r.pokemon) {
+        state.pokemon = r.pokemon;
+        const frame = $('typer-frame').contentWindow;
+        if (frame) frame.postMessage(JSON.stringify({type:'pokemon-update', pokemon:state.pokemon}), appOrigin);
+      }
     } catch (_) {}
+  }
+  async function pokemonRequest(data) {
+    const frame = $('typer-frame').contentWindow;
+    let result;
+    try {
+      if (data.type === 'pokemon-claim') {
+        await flushAllProgress();
+        result = await call('claimPokemon', state.token, {
+          source: data.source, eventId: data.eventId, lessonId: data.lessonId, unit: data.unit
+        });
+      } else {
+        result = await call('updatePokemonPreferences', state.token, {
+          selectedRegion: data.selectedRegion, companionId: data.companionId
+        });
+      }
+      if (result && result.pokemon) state.pokemon = result.pokemon;
+    } catch (e) { result = {ok:false, error:e.message || String(e)}; }
+    if (frame) frame.postMessage(JSON.stringify({type:'pokemon-response', requestId:data.requestId, result}), appOrigin);
   }
   async function logout() {
     await Promise.allSettled([flushSave(), flushActivity()]);
@@ -204,6 +236,7 @@
     if (data.type === 'typer-activity') state.lastKey = performance.now();
     if (data.type === 'typer-context') state.activity = String(data.activity || 'Typer Kids').slice(0, 80);
     if (data.type === 'typer-logout') logout();
+    if (data.type === 'pokemon-claim' || data.type === 'pokemon-preferences') pokemonRequest(data);
   });
   $('login-student').addEventListener('change', updatePinMode);
   $('btn-login').addEventListener('click', signIn);

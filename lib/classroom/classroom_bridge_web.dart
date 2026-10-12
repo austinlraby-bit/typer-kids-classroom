@@ -11,6 +11,7 @@ class ClassroomSession {
   final String emoji;
   final int version;
   final Map<String, dynamic> snapshot;
+  final Map<String, dynamic> pokemon;
 
   const ClassroomSession({
     required this.studentId,
@@ -18,6 +19,7 @@ class ClassroomSession {
     required this.emoji,
     required this.version,
     required this.snapshot,
+    required this.pokemon,
   });
 }
 
@@ -31,6 +33,8 @@ class ClassroomBridge {
   final _sessionCompleter = Completer<ClassroomSession?>();
   Timer? _saveTimer;
   Map<String, dynamic>? _pendingSnapshot;
+  final Map<String, Completer<Map<String, dynamic>>> _requests = {};
+  void Function(Map<String, dynamic>)? onPokemonUpdate;
 
   bool get requested => Uri.base.queryParameters['classroom'] == '1';
 
@@ -50,6 +54,22 @@ class ClassroomBridge {
     }
     try {
       final message = jsonDecode(event.data as String) as Map<String, dynamic>;
+      if (message['type'] == 'pokemon-response') {
+        final requestId = '${message['requestId'] ?? ''}';
+        final completer = _requests.remove(requestId);
+        if (completer != null && !completer.isCompleted) {
+          completer.complete(
+            (message['result'] as Map?)?.cast<String, dynamic>() ?? {},
+          );
+        }
+        return;
+      }
+      if (message['type'] == 'pokemon-update') {
+        onPokemonUpdate?.call(
+          (message['pokemon'] as Map?)?.cast<String, dynamic>() ?? {},
+        );
+        return;
+      }
       if (message['type'] != 'classroom-session' ||
           _sessionCompleter.isCompleted) {
         return;
@@ -69,6 +89,7 @@ class ClassroomBridge {
           emoji: '${profile['avatar'] ?? '🐵'}',
           version: (progress['version'] as num?)?.toInt() ?? 0,
           snapshot: snapshot,
+          pokemon: (message['pokemon'] as Map?)?.cast<String, dynamic>() ?? {},
         ),
       );
     } catch (_) {
@@ -94,6 +115,52 @@ class ClassroomBridge {
 
   void logout() {
     if (requested) _send({'type': 'typer-logout'});
+  }
+
+  Future<Map<String, dynamic>> claimPokemon({
+    required String source,
+    required String eventId,
+    String? lessonId,
+    int? unit,
+  }) {
+    final payload = <String, dynamic>{'source': source, 'eventId': eventId};
+    payload.addAll(
+      {'lessonId': lessonId, 'unit': unit}
+        ..removeWhere((_, value) => value == null),
+    );
+    return _request('pokemon-claim', payload);
+  }
+
+  Future<Map<String, dynamic>> updatePokemonPreferences({
+    int? selectedRegion,
+    int? companionId,
+  }) {
+    final payload = <String, dynamic>{
+      'selectedRegion': selectedRegion,
+      'companionId': companionId,
+    }..removeWhere((_, value) => value == null);
+    return _request('pokemon-preferences', payload);
+  }
+
+  Future<Map<String, dynamic>> _request(
+    String type,
+    Map<String, dynamic> payload,
+  ) {
+    final requestId =
+        '${DateTime.now().microsecondsSinceEpoch}_${_requests.length}';
+    final completer = Completer<Map<String, dynamic>>();
+    _requests[requestId] = completer;
+    _send({'type': type, 'requestId': requestId, ...payload});
+    return completer.future.timeout(
+      const Duration(seconds: 20),
+      onTimeout: () {
+        _requests.remove(requestId);
+        return {
+          'ok': false,
+          'error': 'The classroom connection timed out. Please try again.',
+        };
+      },
+    );
   }
 
   void _send(Map<String, dynamic> message) {

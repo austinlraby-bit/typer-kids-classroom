@@ -9,12 +9,14 @@ const KQ = Object.freeze({
   SESSIONS: 'Sessions',
   SUMMARY: 'Weekly Summary',
   SETTINGS: 'Settings',
+  POKEMON: 'Pokemon Rewards',
   SESSION_TTL: 21600,
   CLASS_GATE_TTL: 21600,
   // Google Sheets cells accept at most 50,000 characters.
   MAX_PROGRESS_BYTES: 45000,
   LOCK_WAIT_MS: 20000,
-  DEFAULT_GOAL_MINUTES: 30
+  DEFAULT_GOAL_MINUTES: 30,
+  DEFAULT_PRACTICE_MINUTES: 10
 });
 
 function doGet() {
@@ -64,6 +66,6 @@ function getSpreadsheet_() {
 function publicError_(err) {
   console.error(err && err.stack ? err.stack : err);
   const message = err && err.message ? err.message : String(err);
-  if (/not set up|temporarily busy|expired|invalid|sign in|incorrect|not correct|four|six|classroom|too many|ask your teacher|no longer active|not found|already set|not active/i.test(message)) return message;
+  if (/not set up|temporarily busy|expired|invalid|sign in|incorrect|not correct|four|six|classroom|too many|ask your teacher|no longer active|not found|already set|not active|finish|practic|region|complete|accuracy|Pokémon|reward/i.test(message)) return message;
   return 'KeyQuest could not complete that request. Please try again.';
 }

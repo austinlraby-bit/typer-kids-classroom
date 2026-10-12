@@ -47,11 +47,17 @@ function saveActivity(token, request) {
       const row = sessionRow_(sheet, sessionId);
       if (row) {
         const current = Number(sheet.getRange(row, 4).getValue()) || 0;
-        if (seconds > current) sheet.getRange(row, 4, 1, 2).setValues([[seconds, activity]]);
+        const accepted = Math.min(seconds, current + 90);
+        if (accepted > current) {
+          sheet.getRange(row, 4, 1, 2).setValues([[accepted, activity]]);
+          creditPokemonPractice_(auth.studentId, accepted - current);
+        }
       } else {
-        sheet.appendRow([sessionId, auth.studentId, date, seconds, activity]);
+        const accepted = Math.min(seconds, 90);
+        sheet.appendRow([sessionId, auth.studentId, date, accepted, activity]);
+        creditPokemonPractice_(auth.studentId, accepted);
       }
-      return { ok: true, activeSeconds: seconds };
+      return { ok: true, activeSeconds: seconds, pokemon: loadPokemonState_(auth.studentId) };
     } finally {
       lock.releaseLock();
     }

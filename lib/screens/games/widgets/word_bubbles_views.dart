@@ -104,7 +104,7 @@ class WordBubblesMenu extends StatelessWidget {
                         ),
                         SizedBox(height: isTall ? 8 : 4),
                         Text(
-                          'Word Bubbles',
+                          'Squirtle’s Bubble Challenge',
                           style: GoogleFonts.fredoka(
                             fontSize: isWide ? 34 : 26,
                             fontWeight: FontWeight.w700,

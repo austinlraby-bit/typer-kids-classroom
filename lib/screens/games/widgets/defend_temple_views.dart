@@ -109,7 +109,7 @@ class DefendTempleMenu extends StatelessWidget {
                         Text('🌻', style: TextStyle(fontSize: emojiSize)),
                         SizedBox(height: isTall ? 8 : 4),
                         Text(
-                          'Garden Guard',
+                          'Pokémon Center Guard',
                           style: GoogleFonts.fredoka(
                             fontSize: headerFontSize,
                             fontWeight: FontWeight.w700,
@@ -417,7 +417,7 @@ class DefendTempleGameOver extends StatelessWidget {
                                 const Icon(Icons.replay_rounded, size: 24),
                                 const SizedBox(width: 8),
                                 Text(
-                                  'Defend Again',
+                                  'Guard Again',
                                   style: GoogleFonts.fredoka(fontSize: 20),
                                 ),
                                 const SizedBox(width: 8),

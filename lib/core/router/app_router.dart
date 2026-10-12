@@ -23,6 +23,7 @@ import '../../screens/sandbox/sandbox_screen.dart';
 import '../../screens/settings_screen.dart';
 import '../../screens/test/typing_test_screen.dart';
 import '../../screens/typing_screen.dart';
+import '../../screens/pokemon_adventure_screen.dart';
 
 /// Centralized router configuration using go_router.
 ///
@@ -83,6 +84,11 @@ class AppRouter {
         path: '/',
         name: 'home',
         builder: (context, state) => const HomeScreen(),
+      ),
+      GoRoute(
+        path: '/adventure',
+        name: 'adventure',
+        builder: (context, state) => const PokemonAdventureScreen(),
       ),
       GoRoute(
         path: '/lessons',

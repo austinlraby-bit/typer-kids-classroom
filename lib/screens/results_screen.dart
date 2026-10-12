@@ -3,11 +3,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
 
 import '../core/theme/app_colors.dart';
 import '../data/lesson_curriculum_selector.dart';
 import '../models/lesson.dart';
 import '../models/typing_stats.dart';
+import '../models/pokemon_species.dart';
+import '../providers/pokemon_provider.dart';
+import '../providers/progress_provider.dart';
 import '../widgets/shortcut_badge.dart';
 import '../widgets/star_rating.dart';
 
@@ -28,6 +32,8 @@ class _ResultsScreenState extends State<ResultsScreen>
   late AnimationController _slideController;
   late Animation<Offset> _slideAnimation;
   final FocusNode _focusNode = FocusNode();
+  final List<PokemonSpecies> _caught = [];
+  bool _checkingRewards = false;
 
   @override
   void initState() {
@@ -56,6 +62,41 @@ class _ResultsScreenState extends State<ResultsScreen>
     Future.delayed(const Duration(milliseconds: 900), () {
       if (mounted) _focusNode.requestFocus();
     });
+    WidgetsBinding.instance.addPostFrameCallback((_) => _claimRewards());
+  }
+
+  Future<void> _claimRewards() async {
+    if (_passed != true || !mounted) return;
+    setState(() => _checkingRewards = true);
+    final provider = context.read<PokemonProvider>();
+    final completed = context.read<ProgressProvider>().completedLessons;
+    final lessonPart = widget.lesson.id.replaceAll(
+      RegExp(r'[^A-Za-z0-9_-]'),
+      '_',
+    );
+    final lessonCatch = await provider.claim(
+      source: 'lesson',
+      eventId: 'lesson_$lessonPart',
+      lessonId: widget.lesson.id,
+    );
+    if (lessonCatch != null) _caught.add(lessonCatch);
+    if (completed > 0 && completed % 10 == 0) {
+      final unit = completed ~/ 10;
+      final unitCatch = await provider.claim(
+        source: 'unit',
+        eventId: 'unit_reward_$unit',
+        unit: unit,
+      );
+      if (unitCatch != null) _caught.add(unitCatch);
+    }
+    final band = widget.stats.accuracy.floor() ~/ 3;
+    final accuracyCatch = await provider.claim(
+      source: 'accuracy',
+      eventId: 'accuracy_${lessonPart}_$band',
+      lessonId: widget.lesson.id,
+    );
+    if (accuracyCatch != null) _caught.add(accuracyCatch);
+    if (mounted) setState(() => _checkingRewards = false);
   }
 
   void _handleKeyEvent(KeyEvent event) {
@@ -142,6 +183,11 @@ class _ResultsScreenState extends State<ResultsScreen>
                                   ],
                                   const SizedBox(height: 24),
                                   _buildStars(),
+                                  if (_checkingRewards ||
+                                      _caught.isNotEmpty) ...[
+                                    const SizedBox(height: 18),
+                                    _buildPokemonReward(),
+                                  ],
                                   const SizedBox(height: 32),
                                   _buildStatsGrid(),
                                   const SizedBox(height: 32),
@@ -200,6 +246,10 @@ class _ResultsScreenState extends State<ResultsScreen>
               ],
               const SizedBox(height: 12),
               _buildStars(),
+              if (_checkingRewards || _caught.isNotEmpty) ...[
+                const SizedBox(height: 12),
+                _buildPokemonReward(),
+              ],
               const SizedBox(height: 16),
               _buildStatsGrid(),
             ],
@@ -237,6 +287,72 @@ class _ResultsScreenState extends State<ResultsScreen>
           child: Text(emoji, style: const TextStyle(fontSize: 80)),
         );
       },
+    );
+  }
+
+  Widget _buildPokemonReward() {
+    if (_checkingRewards && _caught.isEmpty) {
+      return const Card(
+        child: Padding(
+          padding: EdgeInsets.all(16),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              SizedBox(
+                width: 22,
+                height: 22,
+                child: CircularProgressIndicator(strokeWidth: 3),
+              ),
+              SizedBox(width: 12),
+              Text('A wild Pokémon is nearby…'),
+            ],
+          ),
+        ),
+      );
+    }
+    return Wrap(
+      alignment: WrapAlignment.center,
+      spacing: 10,
+      children: _caught
+          .map(
+            (p) => Card(
+              color: const Color(0xFFFFF3C4),
+              child: Padding(
+                padding: const EdgeInsets.all(10),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Image.network(
+                      p.spriteUrl,
+                      width: 72,
+                      height: 72,
+                      filterQuality: FilterQuality.none,
+                      errorBuilder: (context, error, stackTrace) =>
+                          const Icon(Icons.catching_pokemon, size: 60),
+                    ),
+                    const SizedBox(width: 8),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'GOTCHA! 🎉',
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        Text(
+                          p.name,
+                          style: GoogleFonts.fredoka(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          )
+          .toList(),
     );
   }
 
