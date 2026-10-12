@@ -39,6 +39,7 @@ class _TypingScreenState extends State<TypingScreen> {
   int _homeRowPosition = 0;
   bool _homeRowMistake = false;
   bool _isTransitioning = false;
+  bool _capsLockOn = false;
 
   @override
   void initState() {
@@ -76,6 +77,9 @@ class _TypingScreenState extends State<TypingScreen> {
       _showHomeRowCheck = false;
       _homeRowPosition = 0;
       _homeRowMistake = false;
+      _capsLockOn = HardwareKeyboard.instance.lockModesEnabled.contains(
+        KeyboardLockMode.capsLock,
+      );
     });
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _focusNode.requestFocus();
@@ -95,6 +99,34 @@ class _TypingScreenState extends State<TypingScreen> {
   void _handleKeyEvent(KeyEvent event) {
     if (event is! KeyDownEvent) return;
 
+    final character = event.character;
+    final expected =
+        (_showHomeRowCheck
+            ? _homeRowCheck[_homeRowPosition.clamp(0, _homeRowCheck.length - 1)]
+            : _typingProvider.currentChar) ??
+        '';
+    final inferredCapsLock =
+        character != null &&
+        RegExp(r'^[A-Z]$').hasMatch(character) &&
+        RegExp(r'^[a-z]$').hasMatch(expected) &&
+        !HardwareKeyboard.instance.isShiftPressed;
+    final capsLockOn =
+        HardwareKeyboard.instance.lockModesEnabled.contains(
+          KeyboardLockMode.capsLock,
+        ) ||
+        inferredCapsLock;
+    if (capsLockOn != _capsLockOn) {
+      setState(() => _capsLockOn = capsLockOn);
+    }
+
+    // Do not punish a student for typing while Caps Lock is accidentally on.
+    // The key is ignored until they switch it off.
+    if (capsLockOn &&
+        character != null &&
+        RegExp(r'^[A-Za-z]$').hasMatch(character)) {
+      return;
+    }
+
     if (event.logicalKey == LogicalKeyboardKey.escape) {
       _showQuitDialog();
       return;
@@ -109,7 +141,7 @@ class _TypingScreenState extends State<TypingScreen> {
     if (_typingProvider.isPaused) return;
     if (_isTransitioning) return; // Ignore input during exercise transition
 
-    final key = event.character;
+    final key = character;
     if (key != null && key.isNotEmpty) {
       final correct = _typingProvider.onKeyPressed(key);
       if (correct == true) {
@@ -477,6 +509,7 @@ class _TypingScreenState extends State<TypingScreen> {
 
                 return Column(
                   children: [
+                    if (_capsLockOn) _buildCapsLockWarning(),
                     // Live stats bar
                     Padding(
                       padding: EdgeInsets.symmetric(
@@ -581,6 +614,7 @@ class _TypingScreenState extends State<TypingScreen> {
 
                 return Column(
                   children: [
+                    if (_capsLockOn) _buildCapsLockWarning(),
                     Expanded(
                       child: Center(
                         child: SingleChildScrollView(
@@ -697,6 +731,32 @@ class _TypingScreenState extends State<TypingScreen> {
           ),
         );
       }),
+    );
+  }
+
+  Widget _buildCapsLockWarning() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      color: const Color(0xFFFFD54F),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(Icons.keyboard_capslock_rounded, color: Color(0xFF442C00)),
+          const SizedBox(width: 8),
+          Flexible(
+            child: Text(
+              'CAPS LOCK IS ON — press Caps Lock to keep typing',
+              textAlign: TextAlign.center,
+              style: GoogleFonts.fredoka(
+                fontSize: 17,
+                fontWeight: FontWeight.w700,
+                color: const Color(0xFF442C00),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
