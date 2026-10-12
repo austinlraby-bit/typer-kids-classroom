@@ -11,16 +11,33 @@ function getPokemonSprite(token, pokemonId) {
     const key = 'pokemon-sprite:' + id;
     const cached = cache.get(key);
     if (cached) return {ok:true, dataUrl:cached};
-    const response = UrlFetchApp.fetch(
-      'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/' + id + '.png',
-      {muteHttpExceptions:true, followRedirects:true}
-    );
-    if (response.getResponseCode() !== 200) throw new Error('That Pokémon image is unavailable.');
-    const dataUrl = 'data:image/png;base64,' + Utilities.base64Encode(response.getBlob().getBytes());
+    let blob = pokemonSpriteFromDrive_(id);
+    if (!blob) {
+      const response = UrlFetchApp.fetch(
+        'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/' + id + '.png',
+        {muteHttpExceptions:true, followRedirects:true}
+      );
+      if (response.getResponseCode() !== 200) throw new Error('That Pokémon image is unavailable.');
+      blob = response.getBlob();
+    }
+    const dataUrl = 'data:image/png;base64,' + Utilities.base64Encode(blob.getBytes());
     if (dataUrl.length < 95000) cache.put(key, dataUrl, 21600);
     return {ok:true, dataUrl:dataUrl};
   } catch (err) {
     return {ok:false, error:publicError_(err)};
+  }
+}
+
+function pokemonSpriteFromDrive_(pokemonId) {
+  try {
+    const folderId = PropertiesService.getScriptProperties().getProperty('POKEMON_SPRITE_FOLDER_ID');
+    if (!folderId) return null;
+    const folder = DriveApp.getFolderById(folderId);
+    const filename = Utilities.formatString('%04d.png', pokemonId);
+    const files = folder.getFilesByName(filename);
+    return files.hasNext() ? files.next().getBlob() : null;
+  } catch (_) {
+    return null;
   }
 }
 
