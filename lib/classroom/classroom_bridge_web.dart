@@ -42,6 +42,7 @@ class ClassroomBridge {
   Map<String, dynamic>? _pendingSnapshot;
   final Map<String, Completer<Map<String, dynamic>>> _requests = {};
   final Map<int, String> _spriteCache = {};
+  final Map<int, Future<String?>> _spriteRequests = {};
   void Function(Map<String, dynamic>)? onPokemonUpdate;
   void Function(Map<String, dynamic>)? onActivityUpdate;
 
@@ -170,15 +171,21 @@ class ClassroomBridge {
     return _request('pokemon-preferences', payload);
   }
 
-  Future<String?> spriteDataUrl(int id) async {
+  Future<String?> spriteDataUrl(int id) {
     final cached = _spriteCache[id];
-    if (cached != null) return cached;
+    if (cached != null) return Future.value(cached);
+    return _spriteRequests.putIfAbsent(id, () => _loadSprite(id));
+  }
+
+  Future<String?> _loadSprite(int id) async {
     final result = await _request('pokemon-sprite', {'pokemonId': id});
     final dataUrl = result['dataUrl'];
     if (result['ok'] == true && dataUrl is String && dataUrl.isNotEmpty) {
       _spriteCache[id] = dataUrl;
+      _spriteRequests.remove(id);
       return dataUrl;
     }
+    _spriteRequests.remove(id);
     return null;
   }
 

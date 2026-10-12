@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:confetti/confetti.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -6,6 +8,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
 import '../core/theme/app_colors.dart';
+import '../classroom/classroom_bridge.dart';
 import '../data/lesson_curriculum_selector.dart';
 import '../models/lesson.dart';
 import '../models/typing_stats.dart';
@@ -102,7 +105,10 @@ class _ResultsScreenState extends State<ResultsScreen>
           eventId: lessonEvent,
           lessonId: widget.lesson.id,
         );
-        if (lessonCatch != null) _caught.add(lessonCatch);
+        if (lessonCatch != null) {
+          _caught.add(lessonCatch);
+          unawaited(ClassroomBridge.instance.spriteDataUrl(lessonCatch.id));
+        }
       }
       if (wantsUnit) {
         final unitCatch = await provider.claim(
@@ -110,7 +116,10 @@ class _ResultsScreenState extends State<ResultsScreen>
           eventId: unitEvent,
           unit: unit,
         );
-        if (unitCatch != null) _caught.add(unitCatch);
+        if (unitCatch != null) {
+          _caught.add(unitCatch);
+          unawaited(ClassroomBridge.instance.spriteDataUrl(unitCatch.id));
+        }
       }
       if (wantsAccuracy) {
         final accuracyCatch = await provider.claim(
@@ -118,7 +127,10 @@ class _ResultsScreenState extends State<ResultsScreen>
           eventId: accuracyEvent,
           lessonId: widget.lesson.id,
         );
-        if (accuracyCatch != null) _caught.add(accuracyCatch);
+        if (accuracyCatch != null) {
+          _caught.add(accuracyCatch);
+          unawaited(ClassroomBridge.instance.spriteDataUrl(accuracyCatch.id));
+        }
       }
     } finally {
       if (mounted) {

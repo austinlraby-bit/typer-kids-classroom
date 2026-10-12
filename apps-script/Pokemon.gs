@@ -11,15 +11,18 @@ function getPokemonSprite(token, pokemonId) {
     const key = 'pokemon-sprite:' + id;
     const cached = cache.get(key);
     if (cached) return {ok:true, dataUrl:cached};
-    let blob = pokemonSpriteFromDrive_(id);
-    if (!blob) {
+    let blob = null;
+    try {
       const response = UrlFetchApp.fetch(
         'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/' + id + '.png',
         {muteHttpExceptions:true, followRedirects:true}
       );
-      if (response.getResponseCode() !== 200) throw new Error('That Pokémon image is unavailable.');
-      blob = response.getBlob();
+      if (response.getResponseCode() === 200) blob = response.getBlob();
+    } catch (_) {
+      // The private Drive library remains the classroom-safe fallback.
     }
+    if (!blob) blob = pokemonSpriteFromDrive_(id);
+    if (!blob) throw new Error('That Pokémon image is unavailable.');
     const dataUrl = 'data:image/png;base64,' + Utilities.base64Encode(blob.getBytes());
     if (dataUrl.length < 95000) cache.put(key, dataUrl, 21600);
     return {ok:true, dataUrl:dataUrl};
