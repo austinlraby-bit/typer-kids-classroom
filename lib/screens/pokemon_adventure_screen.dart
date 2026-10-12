@@ -5,6 +5,7 @@ import '../models/pokemon_species.dart';
 import '../providers/pokemon_provider.dart';
 import '../providers/progress_provider.dart';
 import '../providers/profile_provider.dart';
+import '../widgets/pokemon_sprite.dart';
 
 class PokemonAdventureScreen extends StatelessWidget {
   const PokemonAdventureScreen({super.key});
@@ -256,15 +257,5 @@ class _Sprite extends StatelessWidget {
           height: size,
           child: const Icon(Icons.catching_pokemon, color: Colors.white54),
         )
-      : Image.network(
-          p!.spriteUrl,
-          width: size,
-          height: size,
-          filterQuality: FilterQuality.none,
-          errorBuilder: (context, error, stackTrace) => SizedBox(
-            width: size,
-            height: size,
-            child: const Icon(Icons.catching_pokemon),
-          ),
-        );
+      : PokemonSprite(p!.id, size: size);
 }

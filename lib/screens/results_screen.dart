@@ -14,6 +14,7 @@ import '../providers/pokemon_provider.dart';
 import '../providers/progress_provider.dart';
 import '../widgets/shortcut_badge.dart';
 import '../widgets/star_rating.dart';
+import '../widgets/pokemon_sprite.dart';
 
 /// Celebration screen shown after completing a lesson
 class ResultsScreen extends StatefulWidget {
@@ -372,18 +373,7 @@ class _ResultsScreenState extends State<ResultsScreen>
                       (pokemon) => Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Image.network(
-                            pokemon.spriteUrl,
-                            width: 112,
-                            height: 112,
-                            filterQuality: FilterQuality.none,
-                            errorBuilder: (context, error, stackTrace) =>
-                                const Icon(
-                                  Icons.catching_pokemon,
-                                  size: 92,
-                                  color: AppColors.primary,
-                                ),
-                          ),
+                          PokemonSprite(pokemon.id, size: 112),
                           Text(
                             pokemon.name,
                             style: GoogleFonts.fredoka(

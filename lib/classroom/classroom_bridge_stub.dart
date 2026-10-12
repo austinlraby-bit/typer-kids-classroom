@@ -39,4 +39,5 @@ class ClassroomBridge {
     int? selectedRegion,
     int? companionId,
   }) async => {'ok': false};
+  Future<String?> spriteDataUrl(int id) async => null;
 }

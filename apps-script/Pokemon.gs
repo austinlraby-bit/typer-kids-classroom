@@ -2,6 +2,28 @@ const POKEMON_REGIONS_ = ['Kanto', 'Johto', 'Hoenn', 'Sinnoh', 'Unova', 'Kalos',
 const POKEMON_RANGES_ = [[1,151],[152,251],[252,386],[387,493],[494,649],[650,721],[722,809],[810,905],[906,1025]];
 const POKEMON_SPECIAL_ = [144,145,146,150,151,243,244,245,249,250,251,377,378,379,380,381,382,383,384,385,386,480,481,482,483,484,485,486,487,488,489,490,491,492,493,494,638,639,640,641,642,643,644,645,646,647,648,649,716,717,718,719,720,721,772,773,785,786,787,788,789,790,791,792,793,794,795,796,797,798,799,800,801,802,807,808,809,888,889,890,891,892,893,894,895,896,897,898,905,1001,1002,1003,1004,1007,1008,1009,1010,1014,1015,1016,1017,1024,1025];
 
+function getPokemonSprite(token, pokemonId) {
+  try {
+    requireSession_(token);
+    const id = Math.floor(Number(pokemonId));
+    if (id < 1 || id > 1025) throw new Error('Invalid Pokémon sprite.');
+    const cache = CacheService.getScriptCache();
+    const key = 'pokemon-sprite:' + id;
+    const cached = cache.get(key);
+    if (cached) return {ok:true, dataUrl:cached};
+    const response = UrlFetchApp.fetch(
+      'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/' + id + '.png',
+      {muteHttpExceptions:true, followRedirects:true}
+    );
+    if (response.getResponseCode() !== 200) throw new Error('That Pokémon image is unavailable.');
+    const dataUrl = 'data:image/png;base64,' + Utilities.base64Encode(response.getBlob().getBytes());
+    if (dataUrl.length < 95000) cache.put(key, dataUrl, 21600);
+    return {ok:true, dataUrl:dataUrl};
+  } catch (err) {
+    return {ok:false, error:publicError_(err)};
+  }
+}
+
 function loadPokemonState_(studentId) {
   const sheet = getSpreadsheet_().getSheetByName(KQ.POKEMON);
   if (!sheet) return freshPokemonState_(studentId);

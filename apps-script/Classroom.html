@@ -222,6 +222,16 @@
     } catch (e) { result = {ok:false, error:e.message || String(e)}; }
     if (frame) frame.postMessage(JSON.stringify({type:'pokemon-response', requestId:data.requestId, result}), appOrigin);
   }
+  async function spriteRequest(data) {
+    const frame = $('typer-frame').contentWindow;
+    let result;
+    try { result = await call('getPokemonSprite', state.token, data.pokemonId); }
+    catch (e) { result = {ok:false}; }
+    if (frame) frame.postMessage(JSON.stringify({
+      type:'sprite-response', requestId:data.requestId,
+      ok:result && result.ok, dataUrl:result && result.dataUrl
+    }), appOrigin);
+  }
   async function logout() {
     await Promise.allSettled([flushSave(), flushActivity()]);
     const token = state.token;
@@ -253,6 +263,7 @@
     }
     if (data.type === 'typer-logout') logout();
     if (data.type === 'pokemon-claim' || data.type === 'pokemon-preferences') pokemonRequest(data);
+    if (data.type === 'pokemon-sprite') spriteRequest(data);
   });
   $('login-student').addEventListener('change', updatePinMode);
   $('btn-login').addEventListener('click', signIn);

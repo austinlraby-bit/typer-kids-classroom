@@ -41,6 +41,7 @@ class ClassroomBridge {
   Timer? _saveTimer;
   Map<String, dynamic>? _pendingSnapshot;
   final Map<String, Completer<Map<String, dynamic>>> _requests = {};
+  final Map<int, String> _spriteCache = {};
   void Function(Map<String, dynamic>)? onPokemonUpdate;
   void Function(Map<String, dynamic>)? onActivityUpdate;
 
@@ -69,6 +70,17 @@ class ClassroomBridge {
           completer.complete(
             (message['result'] as Map?)?.cast<String, dynamic>() ?? {},
           );
+        }
+        return;
+      }
+      if (message['type'] == 'sprite-response') {
+        final requestId = '${message['requestId'] ?? ''}';
+        final completer = _requests.remove(requestId);
+        if (completer != null && !completer.isCompleted) {
+          completer.complete({
+            'ok': message['ok'] == true,
+            'dataUrl': message['dataUrl'],
+          });
         }
         return;
       }
@@ -156,6 +168,18 @@ class ClassroomBridge {
       'companionId': companionId,
     }..removeWhere((_, value) => value == null);
     return _request('pokemon-preferences', payload);
+  }
+
+  Future<String?> spriteDataUrl(int id) async {
+    final cached = _spriteCache[id];
+    if (cached != null) return cached;
+    final result = await _request('pokemon-sprite', {'pokemonId': id});
+    final dataUrl = result['dataUrl'];
+    if (result['ok'] == true && dataUrl is String && dataUrl.isNotEmpty) {
+      _spriteCache[id] = dataUrl;
+      return dataUrl;
+    }
+    return null;
   }
 
   Future<Map<String, dynamic>> _request(
