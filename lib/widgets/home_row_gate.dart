@@ -12,8 +12,40 @@ import 'keyboard_widget.dart';
 /// A brief, shared posture reminder shown roughly once every three activities.
 class HomeRowGate extends StatefulWidget {
   final Widget child;
+  final bool forceShow;
+  final VoidCallback? onComplete;
 
-  const HomeRowGate({super.key, required this.child});
+  const HomeRowGate({
+    super.key,
+    required this.child,
+    this.forceShow = false,
+    this.onComplete,
+  });
+
+  static Future<bool> _isDue(BuildContext context) async {
+    final profileId =
+        context.read<ProfileProvider>().activeProfileId ?? 'default';
+    final prefs = await SharedPreferences.getInstance();
+    final key = 'profile_${profileId}_home_row_activity_launch_count';
+    final next = (prefs.getInt(key) ?? 0) + 1;
+    await prefs.setInt(key, next);
+    return next == 1 || next % 3 == 0;
+  }
+
+  /// Runs the posture check, when due, immediately before typing begins.
+  static Future<void> showIfDue(BuildContext context) async {
+    if (!await _isDue(context) || !context.mounted) return;
+    await Navigator.of(context).push<void>(
+      MaterialPageRoute<void>(
+        fullscreenDialog: true,
+        builder: (routeContext) => HomeRowGate(
+          forceShow: true,
+          onComplete: () => Navigator.of(routeContext).pop(),
+          child: const SizedBox.shrink(),
+        ),
+      ),
+    );
+  }
 
   @override
   State<HomeRowGate> createState() => _HomeRowGateState();
@@ -33,16 +65,9 @@ class _HomeRowGateState extends State<HomeRowGate> {
   }
 
   Future<void> _decideWhetherToShow() async {
-    final profileId =
-        context.read<ProfileProvider>().activeProfileId ?? 'default';
-    final prefs = await SharedPreferences.getInstance();
-    final launchCountKey =
-        'profile_${profileId}_home_row_activity_launch_count';
-    final count = prefs.getInt(launchCountKey) ?? 0;
-    final next = count + 1;
-    await prefs.setInt(launchCountKey, next);
+    final shouldShow = widget.forceShow || await HomeRowGate._isDue(context);
     if (!mounted) return;
-    setState(() => _showCheck = next == 1 || next % 3 == 0);
+    setState(() => _showCheck = shouldShow);
     if (_showCheck == true) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) _focusNode.requestFocus();
@@ -65,7 +90,12 @@ class _HomeRowGateState extends State<HomeRowGate> {
     });
     if (next == _sequence.length) {
       Future<void>.delayed(const Duration(milliseconds: 350), () {
-        if (mounted) setState(() => _showCheck = false);
+        if (!mounted) return;
+        if (widget.onComplete != null) {
+          widget.onComplete!();
+        } else {
+          setState(() => _showCheck = false);
+        }
       });
     }
   }

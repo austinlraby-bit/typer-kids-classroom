@@ -12,6 +12,7 @@ import '../../core/theme/app_colors.dart';
 import '../../data/word_lists.dart';
 import '../../providers/progress_provider.dart';
 import '../../widgets/quit_dialog.dart';
+import '../../widgets/home_row_gate.dart';
 import '../../widgets/pokemon_sprite.dart';
 import 'widgets/key_critters_views.dart';
 
@@ -118,7 +119,9 @@ class _KeyCrittersScreenState extends State<KeyCrittersScreen> {
 
   // ── Game Logic ──
 
-  void _startGame() {
+  Future<void> _startGame() async {
+    await HomeRowGate.showIfDue(context);
+    if (!mounted) return;
     final progress = Provider.of<ProgressProvider>(context, listen: false);
     // Bias spawns toward the profile's tricky keys that fit this pool
     _trickyKeys = progress.trickyKeys

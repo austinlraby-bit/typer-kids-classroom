@@ -12,6 +12,7 @@ import '../../core/sound_manager.dart';
 import '../../data/word_lists.dart';
 import '../../providers/progress_provider.dart';
 import '../../widgets/quit_dialog.dart';
+import '../../widgets/home_row_gate.dart';
 import '../../widgets/pokemon_sprite.dart';
 import 'widgets/speed_chase_views.dart';
 
@@ -104,7 +105,9 @@ class _SpeedChaseScreenState extends State<SpeedChaseScreen> {
 
   // ── Game Logic ──
 
-  void _startGame() {
+  Future<void> _startGame() async {
+    await HomeRowGate.showIfDue(context);
+    if (!mounted) return;
     // Generate word list
     final used = <String>{};
     _words = List.generate(_wordCount, (_) {

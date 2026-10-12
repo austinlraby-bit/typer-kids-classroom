@@ -11,6 +11,7 @@ import '../../data/word_lists.dart';
 import '../../providers/typing_provider.dart';
 import '../../widgets/passage_typing_display.dart';
 import '../../widgets/quit_dialog.dart';
+import '../../widgets/home_row_gate.dart';
 import '../../widgets/stat_tiles.dart';
 import 'widgets/sandbox_views.dart';
 
@@ -78,7 +79,9 @@ class _SandboxScreenState extends State<SandboxScreen> {
   }
 
   // ── Actions ──
-  void _start() {
+  Future<void> _start() async {
+    await HomeRowGate.showIfDue(context);
+    if (!mounted) return;
     _passage = _chosenPassage ?? StoryContent.randomPassage(_difficulty);
     _text = _passage!.text;
     _cursor = 0;

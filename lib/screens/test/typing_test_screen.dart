@@ -11,6 +11,7 @@ import '../../data/word_lists.dart';
 import '../../providers/typing_provider.dart';
 import '../../widgets/passage_typing_display.dart';
 import '../../widgets/quit_dialog.dart';
+import '../../widgets/home_row_gate.dart';
 import '../../widgets/stat_tiles.dart';
 import 'widgets/time_duration_card.dart';
 import 'widgets/typing_test_views.dart';
@@ -81,7 +82,9 @@ class _TypingTestScreenState extends State<TypingTestScreen> {
   }
 
   // ── Actions ──
-  void _start() {
+  Future<void> _start() async {
+    await HomeRowGate.showIfDue(context);
+    if (!mounted) return;
     // Build a long enough text by chaining random passages
     final buffer = StringBuffer();
     final titles = <String>[];

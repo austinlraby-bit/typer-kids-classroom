@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
 
 import '../../core/theme/app_colors.dart';
+import '../../providers/progress_provider.dart';
 import '../../widgets/shortcut_badge.dart';
 import '../../widgets/pokemon_sprite.dart';
 
@@ -18,6 +20,32 @@ class GameMenuScreen extends StatefulWidget {
 class _GameMenuScreenState extends State<GameMenuScreen> {
   final FocusNode _focusNode = FocusNode();
 
+  static const _requirements = <String, (String, String)>{
+    '/games/defend-temple': ('hr-05', 'Home Row Party!'),
+    '/games/falling-words': ('hr-08', 'Home Row Master!'),
+    '/games/word-bubbles': ('tr-03', 'T and Y in the Middle'),
+    '/games/speed-chase': ('tr-06', 'Top Row Review'),
+    '/games/key-critters': ('br-03', 'X and . (Period)'),
+    '/games/story-sprint': ('br-06', 'Bottom Row Review'),
+  };
+
+  void _openGame(String route) {
+    final requirement = _requirements[route]!;
+    final unlocked = context
+        .read<ProgressProvider>()
+        .getProgress(requirement.$1)
+        .completed;
+    if (unlocked) {
+      context.push(route);
+      return;
+    }
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Finish “${requirement.$2}” to unlock this game.'),
+      ),
+    );
+  }
+
   @override
   void dispose() {
     _focusNode.dispose();
@@ -30,17 +58,17 @@ class _GameMenuScreenState extends State<GameMenuScreen> {
     if (key == LogicalKeyboardKey.escape) {
       context.pop();
     } else if (key == LogicalKeyboardKey.digit1) {
-      context.push('/games/defend-temple');
+      _openGame('/games/defend-temple');
     } else if (key == LogicalKeyboardKey.digit2) {
-      context.push('/games/falling-words');
+      _openGame('/games/falling-words');
     } else if (key == LogicalKeyboardKey.digit3) {
-      context.push('/games/word-bubbles');
+      _openGame('/games/word-bubbles');
     } else if (key == LogicalKeyboardKey.digit4) {
-      context.push('/games/speed-chase');
+      _openGame('/games/speed-chase');
     } else if (key == LogicalKeyboardKey.digit5) {
-      context.push('/games/key-critters');
+      _openGame('/games/key-critters');
     } else if (key == LogicalKeyboardKey.digit6) {
-      context.push('/games/story-sprint');
+      _openGame('/games/story-sprint');
     }
   }
 
@@ -55,6 +83,7 @@ class _GameMenuScreenState extends State<GameMenuScreen> {
         child: SafeArea(
           child: LayoutBuilder(
             builder: (context, constraints) {
+              final progress = context.watch<ProgressProvider>();
               final screenW = constraints.maxWidth;
               final screenH = constraints.maxHeight;
               final isWide = screenW > 600;
@@ -82,7 +111,9 @@ class _GameMenuScreenState extends State<GameMenuScreen> {
                   shortcut: '1',
                   color: const Color(0xFF8B0000),
                   compact: !isTall,
-                  onTap: () => context.push('/games/defend-temple'),
+                  unlockLesson: 'Home Row Party!',
+                  unlocked: progress.getProgress('hr-05').completed,
+                  onTap: () => _openGame('/games/defend-temple'),
                 ),
                 _GameCard(
                   pokemonId: 25,
@@ -91,7 +122,9 @@ class _GameMenuScreenState extends State<GameMenuScreen> {
                   shortcut: '2',
                   color: AppColors.primary,
                   compact: !isTall,
-                  onTap: () => context.push('/games/falling-words'),
+                  unlockLesson: 'Home Row Master!',
+                  unlocked: progress.getProgress('hr-08').completed,
+                  onTap: () => _openGame('/games/falling-words'),
                 ),
                 _GameCard(
                   pokemonId: 7,
@@ -100,7 +133,9 @@ class _GameMenuScreenState extends State<GameMenuScreen> {
                   shortcut: '3',
                   color: const Color(0xFF26C6DA),
                   compact: !isTall,
-                  onTap: () => context.push('/games/word-bubbles'),
+                  unlockLesson: 'T and Y in the Middle',
+                  unlocked: progress.getProgress('tr-03').completed,
+                  onTap: () => _openGame('/games/word-bubbles'),
                 ),
                 _GameCard(
                   pokemonId: 78,
@@ -109,7 +144,9 @@ class _GameMenuScreenState extends State<GameMenuScreen> {
                   shortcut: '4',
                   color: const Color(0xFFE53935),
                   compact: !isTall,
-                  onTap: () => context.push('/games/speed-chase'),
+                  unlockLesson: 'Top Row Review',
+                  unlocked: progress.getProgress('tr-06').completed,
+                  onTap: () => _openGame('/games/speed-chase'),
                 ),
                 _GameCard(
                   pokemonId: 50,
@@ -118,7 +155,9 @@ class _GameMenuScreenState extends State<GameMenuScreen> {
                   shortcut: '5',
                   color: const Color(0xFF43A047),
                   compact: !isTall,
-                  onTap: () => context.push('/games/key-critters'),
+                  unlockLesson: 'X and . (Period)',
+                  unlocked: progress.getProgress('br-03').completed,
+                  onTap: () => _openGame('/games/key-critters'),
                 ),
                 _GameCard(
                   pokemonId: 133,
@@ -127,7 +166,9 @@ class _GameMenuScreenState extends State<GameMenuScreen> {
                   shortcut: '6',
                   color: const Color(0xFFFB8C00),
                   compact: !isTall,
-                  onTap: () => context.push('/games/story-sprint'),
+                  unlockLesson: 'Bottom Row Review',
+                  unlocked: progress.getProgress('br-06').completed,
+                  onTap: () => _openGame('/games/story-sprint'),
                 ),
               ];
 
@@ -237,6 +278,8 @@ class _GameCard extends StatelessWidget {
   final String shortcut;
   final Color color;
   final bool compact;
+  final bool unlocked;
+  final String unlockLesson;
   final VoidCallback onTap;
 
   const _GameCard({
@@ -246,6 +289,8 @@ class _GameCard extends StatelessWidget {
     required this.shortcut,
     required this.color,
     this.compact = false,
+    required this.unlocked,
+    required this.unlockLesson,
     required this.onTap,
   });
 
@@ -294,7 +339,9 @@ class _GameCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      description,
+                      unlocked
+                          ? description
+                          : '🔒 Finish “$unlockLesson” to unlock',
                       style: GoogleFonts.nunito(
                         fontSize: descSize,
                         color: AppColors.textSecondary,
@@ -304,7 +351,10 @@ class _GameCard extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 8),
-              ShortcutBadge(shortcut),
+              if (unlocked)
+                ShortcutBadge(shortcut)
+              else
+                const Icon(Icons.lock_rounded),
               const SizedBox(width: 4),
               Icon(Icons.arrow_forward_ios_rounded, size: 18, color: color),
             ],

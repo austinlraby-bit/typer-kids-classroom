@@ -13,6 +13,7 @@ import '../../core/sound_manager.dart';
 import '../../data/word_lists.dart';
 import '../../providers/progress_provider.dart';
 import '../../widgets/quit_dialog.dart';
+import '../../widgets/home_row_gate.dart';
 import '../../widgets/pokemon_sprite.dart';
 import 'widgets/falling_words_models.dart';
 import 'widgets/falling_words_views.dart';
@@ -168,7 +169,9 @@ class _FallingWordsScreenState extends State<FallingWordsScreen>
   }
 
   // ── Game logic ──
-  void _startGame() {
+  Future<void> _startGame() async {
+    await HomeRowGate.showIfDue(context);
+    if (!mounted) return;
     _words.clear();
     _ghosts.clear();
     _input = '';

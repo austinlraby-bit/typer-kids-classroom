@@ -13,6 +13,7 @@ import '../../data/sentence_lists.dart';
 import '../../data/word_lists.dart';
 import '../../providers/progress_provider.dart';
 import '../../widgets/quit_dialog.dart';
+import '../../widgets/home_row_gate.dart';
 import '../../widgets/pokemon_sprite.dart';
 import 'widgets/story_sprint_views.dart';
 
@@ -92,7 +93,9 @@ class _StorySprintScreenState extends State<StorySprintScreen> {
 
   // ── Game Logic ──
 
-  void _startGame() {
+  Future<void> _startGame() async {
+    await HomeRowGate.showIfDue(context);
+    if (!mounted) return;
     _sentences = SentenceLists.shuffledFor(_difficulty);
     _sentenceIndex = 0;
     _charIndex = 0;

@@ -11,6 +11,7 @@ import '../models/lesson.dart';
 import '../providers/progress_provider.dart';
 import '../providers/typing_provider.dart';
 import '../widgets/finger_guide.dart';
+import '../widgets/home_row_gate.dart';
 import '../widgets/keyboard_widget.dart';
 import '../widgets/quit_dialog.dart';
 import '../widgets/stat_tiles.dart';
@@ -67,7 +68,9 @@ class _TypingScreenState extends State<TypingScreen> {
     super.dispose();
   }
 
-  void _startLesson() {
+  Future<void> _startLesson() async {
+    await HomeRowGate.showIfDue(context);
+    if (!mounted) return;
     setState(() {
       _showIntro = false;
       _showHomeRowCheck = false;

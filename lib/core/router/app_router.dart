@@ -24,7 +24,6 @@ import '../../screens/settings_screen.dart';
 import '../../screens/test/typing_test_screen.dart';
 import '../../screens/typing_screen.dart';
 import '../../screens/pokemon_adventure_screen.dart';
-import '../../widgets/home_row_gate.dart';
 import '../../classroom/classroom_bridge.dart';
 
 class _ActivityRouteObserver extends NavigatorObserver {
@@ -127,7 +126,7 @@ class AppRouter {
             // Invalid lesson ID — show home
             return const HomeScreen();
           }
-          return HomeRowGate(child: TypingScreen(lesson: lesson));
+          return TypingScreen(lesson: lesson);
         },
         routes: [
           GoRoute(
@@ -166,56 +165,49 @@ class AppRouter {
             path: 'falling-words',
             name: 'falling-words',
             parentNavigatorKey: _rootNavigatorKey,
-            builder: (context, state) =>
-                const HomeRowGate(child: FallingWordsScreen()),
+            builder: (context, state) => const FallingWordsScreen(),
           ),
           GoRoute(
             path: 'word-bubbles',
             name: 'word-bubbles',
             parentNavigatorKey: _rootNavigatorKey,
-            builder: (context, state) =>
-                const HomeRowGate(child: WordBubblesScreen()),
+            builder: (context, state) => const WordBubblesScreen(),
           ),
           GoRoute(
             path: 'speed-chase',
             name: 'speed-chase',
             parentNavigatorKey: _rootNavigatorKey,
-            builder: (context, state) =>
-                const HomeRowGate(child: SpeedChaseScreen()),
+            builder: (context, state) => const SpeedChaseScreen(),
           ),
           GoRoute(
             path: 'defend-temple',
             name: 'defend-temple',
             parentNavigatorKey: _rootNavigatorKey,
-            builder: (context, state) =>
-                const HomeRowGate(child: DefendTempleScreen()),
+            builder: (context, state) => const DefendTempleScreen(),
           ),
           GoRoute(
             path: 'key-critters',
             name: 'key-critters',
             parentNavigatorKey: _rootNavigatorKey,
-            builder: (context, state) =>
-                const HomeRowGate(child: KeyCrittersScreen()),
+            builder: (context, state) => const KeyCrittersScreen(),
           ),
           GoRoute(
             path: 'story-sprint',
             name: 'story-sprint',
             parentNavigatorKey: _rootNavigatorKey,
-            builder: (context, state) =>
-                const HomeRowGate(child: StorySprintScreen()),
+            builder: (context, state) => const StorySprintScreen(),
           ),
         ],
       ),
       GoRoute(
         path: '/sandbox',
         name: 'sandbox',
-        builder: (context, state) => const HomeRowGate(child: SandboxScreen()),
+        builder: (context, state) => const SandboxScreen(),
       ),
       GoRoute(
         path: '/test',
         name: 'typing-test',
-        builder: (context, state) =>
-            const HomeRowGate(child: TypingTestScreen()),
+        builder: (context, state) => const TypingTestScreen(),
       ),
     ],
     errorBuilder: (context, state) => const HomeScreen(),

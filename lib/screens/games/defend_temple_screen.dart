@@ -13,6 +13,7 @@ import '../../core/sound_manager.dart';
 import '../../data/word_lists.dart';
 import '../../providers/progress_provider.dart';
 import '../../widgets/quit_dialog.dart';
+import '../../widgets/home_row_gate.dart';
 import '../../widgets/pokemon_sprite.dart';
 import 'widgets/defend_temple_models.dart';
 import 'widgets/defend_temple_views.dart';
@@ -172,7 +173,9 @@ class _DefendTempleScreenState extends State<DefendTempleScreen>
   }
 
   // ── Game logic ──
-  void _startGame() {
+  Future<void> _startGame() async {
+    await HomeRowGate.showIfDue(context);
+    if (!mounted) return;
     _demons.clear();
     _ghosts.clear();
     _trishuls.clear();
