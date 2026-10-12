@@ -420,15 +420,23 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ),
         if (useGrid)
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              for (var i = 0; i < cards.length; i++) ...[
-                Expanded(child: cards[i]),
-                if (i < cards.length - 1) const SizedBox(width: 10),
-              ],
-            ],
-          )
+          for (var i = 0; i < cards.length; i += 2) ...[
+            IntrinsicHeight(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Expanded(child: cards[i]),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: i + 1 < cards.length
+                        ? cards[i + 1]
+                        : const SizedBox.shrink(),
+                  ),
+                ],
+              ),
+            ),
+            if (i + 2 < cards.length) const SizedBox(height: 12),
+          ]
         else ...[
           for (var i = 0; i < cards.length; i++) ...[
             cards[i],
