@@ -559,7 +559,7 @@ class _TypingScreenState extends State<TypingScreen> {
                         child: KeyboardWidget(
                           activeKey: _typingProvider.currentChar,
                           showFingerColors: true,
-                          showHandOverlay: true,
+                          showHandOverlay: false,
                           keySize: keySize,
                         ),
                       ),
@@ -683,7 +683,7 @@ class _TypingScreenState extends State<TypingScreen> {
                           activeKey: currentKey,
                           correctKeys: completedKeys,
                           showFingerColors: true,
-                          showHandOverlay: true,
+                          showHandOverlay: false,
                           keySize: keySize,
                         ),
                       ),
