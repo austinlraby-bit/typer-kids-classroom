@@ -270,9 +270,12 @@ class _SvgHandOverlayState extends State<_SvgHandOverlay> {
                 child: SizedBox(
                   width: width,
                   height: width * 380 / 716.3,
-                  child: SvgPicture.string(
-                    _pose(snapshot.data!),
-                    fit: BoxFit.fill,
+                  child: Opacity(
+                    opacity: 0.48,
+                    child: SvgPicture.string(
+                      _pose(snapshot.data!),
+                      fit: BoxFit.fill,
+                    ),
                   ),
                 ),
               ),
