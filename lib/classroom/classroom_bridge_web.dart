@@ -51,8 +51,20 @@ class ClassroomBridge {
 
   Future<ClassroomSession?> waitForSession() async {
     if (!requested) return null;
+    // The Apps Script host and the Flutter iframe load independently. Safari
+    // on managed iPads can drop the first cross-frame message while the child
+    // is still becoming active, so keep announcing readiness until the host's
+    // session arrives instead of leaving the app blank forever.
+    final readyTimer = Timer.periodic(
+      const Duration(milliseconds: 700),
+      (_) => _send({'type': 'typer-ready'}),
+    );
     _send({'type': 'typer-ready'});
-    return _sessionCompleter.future;
+    try {
+      return await _sessionCompleter.future;
+    } finally {
+      readyTimer.cancel();
+    }
   }
 
   void _onMessage(html.MessageEvent event) {
@@ -123,6 +135,7 @@ class ClassroomBridge {
               (message['activity'] as Map?)?.cast<String, dynamic>() ?? {},
         ),
       );
+      _send({'type': 'typer-session-ready'});
       Timer(const Duration(seconds: 1), _replayPendingPokemonClaims);
     } catch (_) {
       // Ignore unrelated messages from the host page.

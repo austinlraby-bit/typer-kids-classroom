@@ -19,6 +19,12 @@ void main() async {
   GoRouter.optionURLReflectsImperativeAPIs = true;
 
   final classroom = ClassroomBridge.instance;
+  if (classroom.requested) {
+    // Paint immediately while the protected host passes the authenticated
+    // student session into this iframe. Previously main awaited that message
+    // before drawing a frame, so a missed message looked like a crashed app.
+    runApp(const ClassroomLoadingApp());
+  }
   final classroomSession = await classroom.waitForSession();
 
   // This build is intentionally classroom-only. The static host serves the
@@ -61,6 +67,37 @@ void main() async {
       onTaskProvider: onTaskProvider,
     ),
   );
+}
+
+class ClassroomLoadingApp extends StatelessWidget {
+  const ClassroomLoadingApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      theme: AppTheme.theme,
+      home: const Scaffold(
+        body: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              SizedBox(
+                width: 42,
+                height: 42,
+                child: CircularProgressIndicator(strokeWidth: 5),
+              ),
+              SizedBox(height: 18),
+              Text(
+                'Opening your adventure…',
+                style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 class ClassroomOnlyApp extends StatelessWidget {

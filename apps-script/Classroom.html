@@ -113,7 +113,15 @@
     $('student-name').textContent = state.student.name;
     $('login-screen').hidden = true;
     $('app-screen').hidden = false;
-    $('typer-frame').src = window.TYPER_KIDS_URL + '/?classroom=1';
+    const frame = $('typer-frame');
+    frame.onload = () => {
+      // Send proactively as well as in response to typer-ready. Repeating is
+      // harmless and avoids an iPad Safari race during nested iframe startup.
+      sendSession();
+      setTimeout(sendSession, 700);
+      setTimeout(sendSession, 1800);
+    };
+    frame.src = window.TYPER_KIDS_URL + '/?classroom=1';
     startActivity();
   }
   function sendSession() {
