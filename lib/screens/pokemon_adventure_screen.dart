@@ -66,26 +66,6 @@ class PokemonAdventureScreen extends StatelessWidget {
                     ),
                   ],
                 ),
-                FilledButton.icon(
-                  onPressed: pokemon.unclaimedEncounters > 0 && !pokemon.busy
-                      ? () async {
-                          final caught = await pokemon.claim(
-                            source: 'practice',
-                            eventId:
-                                'practice_${DateTime.now().microsecondsSinceEpoch}',
-                          );
-                          if (context.mounted && caught != null) {
-                            _caughtDialog(context, caught);
-                          }
-                        }
-                      : null,
-                  icon: const Icon(Icons.catching_pokemon),
-                  label: Text(
-                    pokemon.unclaimedEncounters > 0
-                        ? 'Start encounter (${pokemon.unclaimedEncounters})'
-                        : '${pokemon.practiceSeconds ~/ 60}/${pokemon.practiceMinutes} practice min',
-                  ),
-                ),
               ],
             ),
           ),
@@ -128,30 +108,6 @@ class PokemonAdventureScreen extends StatelessWidget {
     );
   }
 
-  static void _caughtDialog(BuildContext context, PokemonSpecies p) =>
-      showDialog(
-        context: context,
-        builder: (c) => AlertDialog(
-          title: const Text('Gotcha! 🎉'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              _Sprite(p, size: 150),
-              Text(
-                '${p.name} was added to your Pokédex!',
-                textAlign: TextAlign.center,
-                style: GoogleFonts.fredoka(fontSize: 22),
-              ),
-            ],
-          ),
-          actions: [
-            FilledButton(
-              onPressed: () => Navigator.pop(c),
-              child: const Text('Awesome!'),
-            ),
-          ],
-        ),
-      );
 }
 
 class _PokedexGrid extends StatelessWidget {
