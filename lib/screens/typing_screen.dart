@@ -546,7 +546,7 @@ class _TypingScreenState extends State<TypingScreen> {
                     if (!isShort)
                       FingerGuide(
                         currentKey: _typingProvider.currentChar,
-                        showHands: false,
+                        showHands: true,
                       ),
                     // Virtual keyboard — pinned to bottom
                     Padding(
@@ -559,7 +559,7 @@ class _TypingScreenState extends State<TypingScreen> {
                         child: KeyboardWidget(
                           activeKey: _typingProvider.currentChar,
                           showFingerColors: true,
-                          showHandOverlay: true,
+                          showHandOverlay: false,
                           keySize: keySize,
                         ),
                       ),
@@ -671,7 +671,7 @@ class _TypingScreenState extends State<TypingScreen> {
                       ),
                     ),
                     if (currentKey != null)
-                      FingerGuide(currentKey: currentKey, showHands: false),
+                      FingerGuide(currentKey: currentKey, showHands: true),
                     Padding(
                       padding: EdgeInsets.only(
                         left: horizontalPad,
@@ -683,7 +683,7 @@ class _TypingScreenState extends State<TypingScreen> {
                           activeKey: currentKey,
                           correctKeys: completedKeys,
                           showFingerColors: true,
-                          showHandOverlay: true,
+                          showHandOverlay: false,
                           keySize: keySize,
                         ),
                       ),
