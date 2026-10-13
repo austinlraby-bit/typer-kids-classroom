@@ -281,23 +281,28 @@ class _KeyboardHandsPainter extends CustomPainter {
         ? AppColors.secondary
         : KeyboardData.fingerColor(activeFinger);
 
+    final leftHome = [_keyCenter(size, 'a'), _keyCenter(size, 'f')];
+    final rightHome = [_keyCenter(size, 'j'), _keyCenter(size, ';')];
+    final baseY = _rowY(3) + keySize * 0.92;
     final palmY = math.min(
-      size.height - keySize * 0.15,
-      _rowY(4) + keySize * 0.58,
+      size.height + keySize * 0.18,
+      baseY + keySize * 0.78,
     );
+    final leftPalmX = (leftHome.first.dx + leftHome.last.dx) / 2;
+    final rightPalmX = (rightHome.first.dx + rightHome.last.dx) / 2;
     _drawPalm(
       canvas,
-      Offset(size.width * 0.31, palmY),
-      size.width * 0.34,
-      keySize * 2.7,
+      Offset(leftPalmX, palmY),
+      keySize * 4.45,
+      keySize * 1.85,
       skin,
       outline,
     );
     _drawPalm(
       canvas,
-      Offset(size.width * 0.69, palmY),
-      size.width * 0.34,
-      keySize * 2.7,
+      Offset(rightPalmX, palmY),
+      keySize * 4.45,
+      keySize * 1.85,
       skin,
       outline,
     );
@@ -305,46 +310,35 @@ class _KeyboardHandsPainter extends CustomPainter {
     final entries = _homeKeys.entries.toList();
     for (var i = 0; i < entries.length; i++) {
       final entry = entries[i];
-      final leftHand = entry.key.startsWith('left');
       final home = _keyCenter(size, entry.value);
       final isActive = activeFinger == entry.key;
       final target = isActive && activeKey != null
           ? _keyCenter(size, activeKey!)
           : home;
-      final handIndex = leftHand ? i : i - 4;
-      final palmCenterX = size.width * (leftHand ? 0.31 : 0.69);
-      final base = Offset(
-        palmCenterX + (handIndex - 1.5) * keySize * 0.62,
-        palmY - keySize * 0.48,
-      );
+      final base = Offset(home.dx, baseY);
       _drawFinger(
         canvas,
         base,
         target,
-        keySize * (isActive ? 0.54 : 0.48),
+        keySize * (isActive ? 0.48 : 0.42),
         skin,
         outline,
         isActive ? activeColor : null,
       );
     }
 
-    final space = _keyCenter(size, ' ');
-    _drawThumb(
-      canvas,
-      Offset(size.width * 0.39, palmY - keySize * 0.1),
-      space - Offset(keySize * 0.5, 0),
-      skin,
-      outline,
-      activeFinger == 'thumb' ? activeColor : null,
-    );
-    _drawThumb(
-      canvas,
-      Offset(size.width * 0.61, palmY - keySize * 0.1),
-      space + Offset(keySize * 0.5, 0),
-      skin,
-      outline,
-      activeFinger == 'thumb' ? activeColor : null,
-    );
+    if (activeFinger == 'thumb') {
+      final space = _keyCenter(size, ' ');
+      _drawFinger(
+        canvas,
+        Offset(leftPalmX + keySize * 1.35, palmY - keySize * 0.42),
+        space - Offset(keySize * 0.42, 0),
+        keySize * 0.46,
+        skin,
+        outline,
+        activeColor,
+      );
+    }
   }
 
   void _drawPalm(
@@ -359,11 +353,11 @@ class _KeyboardHandsPainter extends CustomPainter {
       Rect.fromCenter(center: center, width: width, height: height),
       Radius.circular(height * 0.38),
     );
-    canvas.drawRRect(rect, Paint()..color = skin.withValues(alpha: 0.24));
+    canvas.drawRRect(rect, Paint()..color = skin.withValues(alpha: 0.15));
     canvas.drawRRect(
       rect,
       Paint()
-        ..color = outline.withValues(alpha: 0.38)
+        ..color = outline.withValues(alpha: 0.24)
         ..style = PaintingStyle.stroke
         ..strokeWidth = 1.6,
     );
@@ -378,10 +372,7 @@ class _KeyboardHandsPainter extends CustomPainter {
     Color outline,
     Color? active,
   ) {
-    final control = Offset(
-      (base.dx + tip.dx) / 2,
-      math.min(base.dy, tip.dy) - keySize * 0.18,
-    );
+    final control = Offset((base.dx + tip.dx) / 2, (base.dy + tip.dy) / 2);
     final path = Path()
       ..moveTo(base.dx, base.dy)
       ..quadraticBezierTo(control.dx, control.dy, tip.dx, tip.dy);
@@ -389,7 +380,7 @@ class _KeyboardHandsPainter extends CustomPainter {
       canvas.drawPath(
         path,
         Paint()
-          ..color = active.withValues(alpha: 0.22)
+          ..color = active.withValues(alpha: 0.16)
           ..style = PaintingStyle.stroke
           ..strokeWidth = width + 10
           ..strokeCap = StrokeCap.round
@@ -400,7 +391,7 @@ class _KeyboardHandsPainter extends CustomPainter {
       path,
       Paint()
         ..color = (active ?? skin).withValues(
-          alpha: active == null ? 0.28 : 0.56,
+          alpha: active == null ? 0.16 : 0.42,
         )
         ..style = PaintingStyle.stroke
         ..strokeWidth = width
@@ -410,28 +401,12 @@ class _KeyboardHandsPainter extends CustomPainter {
       path,
       Paint()
         ..color = (active ?? outline).withValues(
-          alpha: active == null ? 0.46 : 0.9,
+          alpha: active == null ? 0.24 : 0.72,
         )
         ..style = PaintingStyle.stroke
-        ..strokeWidth = 1.8
+        ..strokeWidth = 1.4
         ..strokeCap = StrokeCap.round,
     );
-    canvas.drawOval(
-      Rect.fromCenter(center: tip, width: width * 0.48, height: width * 0.24),
-      Paint()
-        ..color = Colors.white.withValues(alpha: active == null ? 0.3 : 0.62),
-    );
-  }
-
-  void _drawThumb(
-    Canvas canvas,
-    Offset base,
-    Offset tip,
-    Color skin,
-    Color outline,
-    Color? active,
-  ) {
-    _drawFinger(canvas, base, tip, keySize * 0.52, skin, outline, active);
   }
 
   @override
