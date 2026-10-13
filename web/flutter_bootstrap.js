@@ -16,5 +16,13 @@
         .map((name) => caches.delete(name)),
     );
   }
+  // GitHub Pages may retain the compiled JavaScript briefly even after a new
+  // deployment. Version the entrypoint independently so classroom iPads do
+  // not combine a fresh shell with an older application bundle.
+  for (const build of _flutter.buildConfig.builds) {
+    if (build.mainJsPath === 'main.dart.js') {
+      build.mainJsPath = 'main.dart.js?v=20261013-finger-reach';
+    }
+  }
   await _flutter.loader.load();
 })();
