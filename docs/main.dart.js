@@ -107417,7 +107417,7 @@ r=B.YC.i(0,s)
 q='<g id="'+("hand-"+(r==null?s.toLowerCase():r))
 return B.c.hY(p,q+'" style="display: none"',q+'" style="display: inline"')},
 H(a){var s,r=this,q=r.d
-if(q===$){s=$.wL().a4m("assets/images/vkeyboardhand_hand.svg")
+if(q===$){s=$.wL().a4m("assets/images/vkeyboardhand_hand_v2.svg")
 r.d!==$&&A.aH()
 r.d=s
 q=s}return A.aXN(new A.aLO(r),q,t.N)}}

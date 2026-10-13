@@ -220,7 +220,7 @@ class _SvgHandOverlay extends StatefulWidget {
 
 class _SvgHandOverlayState extends State<_SvgHandOverlay> {
   late final Future<String> _source = rootBundle.loadString(
-    'assets/images/vkeyboardhand_hand.svg',
+    'assets/images/vkeyboardhand_hand_v2.svg',
   );
 
   static const _poseNames = <String, String>{
