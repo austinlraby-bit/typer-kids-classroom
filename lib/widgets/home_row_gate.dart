@@ -230,7 +230,7 @@ class _HomeRowGateState extends State<HomeRowGate> {
                         activeKey: currentKey,
                         correctKeys: completedKeys,
                         showFingerColors: true,
-                        showHandOverlay: false,
+                        showHandOverlay: true,
                         keySize: keySize,
                       ),
                     ),

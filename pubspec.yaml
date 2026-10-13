@@ -15,6 +15,7 @@ dependencies:
   audioplayers: ^6.4.0
   confetti: ^0.8.0
   go_router: ^17.1.0
+  flutter_svg: ^2.3.0
 
 dev_dependencies:
   flutter_test:
@@ -48,6 +49,7 @@ flutter:
     - assets/sounds/
     - assets/data/
     - assets/images/
+    - assets/licenses/
     - assets/app_icon.png
   #   - family: Schyler
   #     fonts:
