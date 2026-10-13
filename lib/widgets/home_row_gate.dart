@@ -222,13 +222,15 @@ class _HomeRowGateState extends State<HomeRowGate> {
                         ),
                       ),
                     ),
-                    if (currentKey != null) FingerGuide(currentKey: currentKey),
+                    if (currentKey != null)
+                      FingerGuide(currentKey: currentKey, showHands: false),
                     Padding(
                       padding: EdgeInsets.fromLTRB(pad, 0, pad, 12),
                       child: KeyboardWidget(
                         activeKey: currentKey,
                         correctKeys: completedKeys,
                         showFingerColors: true,
+                        showHandOverlay: true,
                         keySize: keySize,
                       ),
                     ),

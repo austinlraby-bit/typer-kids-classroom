@@ -8,8 +8,9 @@ import '../data/keyboard_data.dart';
 /// that highlights the correct finger above the keyboard.
 class FingerGuide extends StatelessWidget {
   final String? currentKey;
+  final bool showHands;
 
-  const FingerGuide({super.key, this.currentKey});
+  const FingerGuide({super.key, this.currentKey, this.showHands = true});
 
   @override
   Widget build(BuildContext context) {
@@ -27,24 +28,26 @@ class FingerGuide extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         // Hand diagram showing active finger
-        SizedBox(
-          height: 76,
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              _HandDiagram(
-                isLeft: true,
-                activeFinger: isLeft ? finger : (isThumb ? 'thumb' : null),
-              ),
-              const SizedBox(width: 8),
-              _HandDiagram(
-                isLeft: false,
-                activeFinger: !isLeft ? finger : (isThumb ? 'thumb' : null),
-              ),
-            ],
+        if (showHands) ...[
+          SizedBox(
+            height: 76,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _HandDiagram(
+                  isLeft: true,
+                  activeFinger: isLeft ? finger : (isThumb ? 'thumb' : null),
+                ),
+                const SizedBox(width: 8),
+                _HandDiagram(
+                  isLeft: false,
+                  activeFinger: !isLeft ? finger : (isThumb ? 'thumb' : null),
+                ),
+              ],
+            ),
           ),
-        ),
-        const SizedBox(height: 4),
+          const SizedBox(height: 4),
+        ],
         // Finger label
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),

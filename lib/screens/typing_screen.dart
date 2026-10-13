@@ -544,7 +544,10 @@ class _TypingScreenState extends State<TypingScreen> {
                     // Keep the hand cue visually attached to the keyboard,
                     // like established typing tutors do.
                     if (!isShort)
-                      FingerGuide(currentKey: _typingProvider.currentChar),
+                      FingerGuide(
+                        currentKey: _typingProvider.currentChar,
+                        showHands: false,
+                      ),
                     // Virtual keyboard — pinned to bottom
                     Padding(
                       padding: EdgeInsets.only(
@@ -556,6 +559,7 @@ class _TypingScreenState extends State<TypingScreen> {
                         child: KeyboardWidget(
                           activeKey: _typingProvider.currentChar,
                           showFingerColors: true,
+                          showHandOverlay: true,
                           keySize: keySize,
                         ),
                       ),
@@ -666,7 +670,8 @@ class _TypingScreenState extends State<TypingScreen> {
                         ),
                       ),
                     ),
-                    if (currentKey != null) FingerGuide(currentKey: currentKey),
+                    if (currentKey != null)
+                      FingerGuide(currentKey: currentKey, showHands: false),
                     Padding(
                       padding: EdgeInsets.only(
                         left: horizontalPad,
@@ -678,6 +683,7 @@ class _TypingScreenState extends State<TypingScreen> {
                           activeKey: currentKey,
                           correctKeys: completedKeys,
                           showFingerColors: true,
+                          showHandOverlay: true,
                           keySize: keySize,
                         ),
                       ),

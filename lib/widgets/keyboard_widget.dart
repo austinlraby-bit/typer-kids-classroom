@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -21,6 +23,7 @@ class KeyboardWidget extends StatelessWidget {
 
   /// Size of each key in pixels. Scales the entire keyboard.
   final double keySize;
+  final bool showHandOverlay;
 
   const KeyboardWidget({
     super.key,
@@ -29,6 +32,7 @@ class KeyboardWidget extends StatelessWidget {
     this.incorrectKeys = const {},
     this.showFingerColors = true,
     this.keySize = 40,
+    this.showHandOverlay = false,
   });
 
   double get _gap => (keySize * 0.05).clamp(2, 4);
@@ -38,7 +42,7 @@ class KeyboardWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    final keyboard = Container(
       padding: EdgeInsets.all(_padding),
       decoration: BoxDecoration(
         color: Colors.grey.shade200,
@@ -79,6 +83,25 @@ class KeyboardWidget extends StatelessWidget {
           _buildSpaceBar(),
         ],
       ),
+    );
+    if (!showHandOverlay) return keyboard;
+    return Stack(
+      alignment: Alignment.center,
+      children: [
+        keyboard,
+        Positioned.fill(
+          child: IgnorePointer(
+            child: CustomPaint(
+              painter: _KeyboardHandsPainter(
+                keySize: keySize,
+                gap: _gap,
+                padding: _padding,
+                activeKey: activeKey,
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 
@@ -193,4 +216,225 @@ class KeyboardWidget extends StatelessWidget {
       ),
     );
   }
+}
+
+class _KeyboardHandsPainter extends CustomPainter {
+  final double keySize;
+  final double gap;
+  final double padding;
+  final String? activeKey;
+
+  const _KeyboardHandsPainter({
+    required this.keySize,
+    required this.gap,
+    required this.padding,
+    required this.activeKey,
+  });
+
+  static const _homeKeys = <String, String>{
+    'left-pinky': 'a',
+    'left-ring': 's',
+    'left-middle': 'd',
+    'left-index': 'f',
+    'right-index': 'j',
+    'right-middle': 'k',
+    'right-ring': 'l',
+    'right-pinky': ';',
+  };
+
+  Offset _keyCenter(Size size, String rawKey) {
+    final key = KeyboardData.baseKey(rawKey);
+    if (key == ' ') {
+      return Offset(size.width / 2, _rowY(4));
+    }
+    for (var row = 0; row < 4; row++) {
+      final keys = KeyboardData.keyboardRows[row];
+      final index = keys.indexOf(key);
+      if (index < 0) continue;
+      final indent = switch (row) {
+        1 => keySize * 0.5,
+        2 => keySize * 0.8,
+        3 => keySize * 1.25,
+        _ => 0.0,
+      };
+      final unit = keySize + gap * 2;
+      final rowWidth = keys.length * unit + indent;
+      final left = (size.width - rowWidth) / 2 + indent;
+      return Offset(left + gap + keySize / 2 + index * unit, _rowY(row));
+    }
+    return Offset(size.width / 2, _rowY(2));
+  }
+
+  double _rowY(int row) {
+    final rowHeight = keySize + gap * 2;
+    return padding + row * (rowHeight + gap) + gap + keySize / 2;
+  }
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final activeFinger = activeKey == null
+        ? null
+        : KeyboardData.keyToFinger[KeyboardData.baseKey(activeKey!)];
+    final skin = const Color(0xFFFFC98C);
+    final outline = const Color(0xFFB96F35);
+    final activeColor = activeFinger == null
+        ? AppColors.secondary
+        : KeyboardData.fingerColor(activeFinger);
+
+    final palmY = math.min(
+      size.height - keySize * 0.15,
+      _rowY(4) + keySize * 0.58,
+    );
+    _drawPalm(
+      canvas,
+      Offset(size.width * 0.31, palmY),
+      size.width * 0.34,
+      keySize * 2.7,
+      skin,
+      outline,
+    );
+    _drawPalm(
+      canvas,
+      Offset(size.width * 0.69, palmY),
+      size.width * 0.34,
+      keySize * 2.7,
+      skin,
+      outline,
+    );
+
+    final entries = _homeKeys.entries.toList();
+    for (var i = 0; i < entries.length; i++) {
+      final entry = entries[i];
+      final leftHand = entry.key.startsWith('left');
+      final home = _keyCenter(size, entry.value);
+      final isActive = activeFinger == entry.key;
+      final target = isActive && activeKey != null
+          ? _keyCenter(size, activeKey!)
+          : home;
+      final handIndex = leftHand ? i : i - 4;
+      final palmCenterX = size.width * (leftHand ? 0.31 : 0.69);
+      final base = Offset(
+        palmCenterX + (handIndex - 1.5) * keySize * 0.62,
+        palmY - keySize * 0.48,
+      );
+      _drawFinger(
+        canvas,
+        base,
+        target,
+        keySize * (isActive ? 0.54 : 0.48),
+        skin,
+        outline,
+        isActive ? activeColor : null,
+      );
+    }
+
+    final space = _keyCenter(size, ' ');
+    _drawThumb(
+      canvas,
+      Offset(size.width * 0.39, palmY - keySize * 0.1),
+      space - Offset(keySize * 0.5, 0),
+      skin,
+      outline,
+      activeFinger == 'thumb' ? activeColor : null,
+    );
+    _drawThumb(
+      canvas,
+      Offset(size.width * 0.61, palmY - keySize * 0.1),
+      space + Offset(keySize * 0.5, 0),
+      skin,
+      outline,
+      activeFinger == 'thumb' ? activeColor : null,
+    );
+  }
+
+  void _drawPalm(
+    Canvas canvas,
+    Offset center,
+    double width,
+    double height,
+    Color skin,
+    Color outline,
+  ) {
+    final rect = RRect.fromRectAndRadius(
+      Rect.fromCenter(center: center, width: width, height: height),
+      Radius.circular(height * 0.38),
+    );
+    canvas.drawRRect(rect, Paint()..color = skin.withValues(alpha: 0.24));
+    canvas.drawRRect(
+      rect,
+      Paint()
+        ..color = outline.withValues(alpha: 0.38)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1.6,
+    );
+  }
+
+  void _drawFinger(
+    Canvas canvas,
+    Offset base,
+    Offset tip,
+    double width,
+    Color skin,
+    Color outline,
+    Color? active,
+  ) {
+    final control = Offset(
+      (base.dx + tip.dx) / 2,
+      math.min(base.dy, tip.dy) - keySize * 0.18,
+    );
+    final path = Path()
+      ..moveTo(base.dx, base.dy)
+      ..quadraticBezierTo(control.dx, control.dy, tip.dx, tip.dy);
+    if (active != null) {
+      canvas.drawPath(
+        path,
+        Paint()
+          ..color = active.withValues(alpha: 0.22)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = width + 10
+          ..strokeCap = StrokeCap.round
+          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 5),
+      );
+    }
+    canvas.drawPath(
+      path,
+      Paint()
+        ..color = (active ?? skin).withValues(
+          alpha: active == null ? 0.28 : 0.56,
+        )
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = width
+        ..strokeCap = StrokeCap.round,
+    );
+    canvas.drawPath(
+      path,
+      Paint()
+        ..color = (active ?? outline).withValues(
+          alpha: active == null ? 0.46 : 0.9,
+        )
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1.8
+        ..strokeCap = StrokeCap.round,
+    );
+    canvas.drawOval(
+      Rect.fromCenter(center: tip, width: width * 0.48, height: width * 0.24),
+      Paint()
+        ..color = Colors.white.withValues(alpha: active == null ? 0.3 : 0.62),
+    );
+  }
+
+  void _drawThumb(
+    Canvas canvas,
+    Offset base,
+    Offset tip,
+    Color skin,
+    Color outline,
+    Color? active,
+  ) {
+    _drawFinger(canvas, base, tip, keySize * 0.52, skin, outline, active);
+  }
+
+  @override
+  bool shouldRepaint(covariant _KeyboardHandsPainter oldDelegate) =>
+      oldDelegate.activeKey != activeKey || oldDelegate.keySize != keySize;
 }
