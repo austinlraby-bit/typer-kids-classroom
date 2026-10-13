@@ -1,5 +1,3 @@
-import 'dart:math' as math;
-
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -91,12 +89,19 @@ class KeyboardWidget extends StatelessWidget {
         keyboard,
         Positioned.fill(
           child: IgnorePointer(
-            child: CustomPaint(
-              painter: _KeyboardHandsPainter(
-                keySize: keySize,
-                gap: _gap,
-                padding: _padding,
-                activeKey: activeKey,
+            child: Align(
+              alignment: Alignment.bottomCenter,
+              child: FractionallySizedBox(
+                widthFactor: 0.72,
+                heightFactor: 0.98,
+                child: Opacity(
+                  opacity: 0.28,
+                  child: Image.asset(
+                    'assets/images/typing_hands.png',
+                    fit: BoxFit.fill,
+                    filterQuality: FilterQuality.high,
+                  ),
+                ),
               ),
             ),
           ),
@@ -216,200 +221,4 @@ class KeyboardWidget extends StatelessWidget {
       ),
     );
   }
-}
-
-class _KeyboardHandsPainter extends CustomPainter {
-  final double keySize;
-  final double gap;
-  final double padding;
-  final String? activeKey;
-
-  const _KeyboardHandsPainter({
-    required this.keySize,
-    required this.gap,
-    required this.padding,
-    required this.activeKey,
-  });
-
-  static const _homeKeys = <String, String>{
-    'left-pinky': 'a',
-    'left-ring': 's',
-    'left-middle': 'd',
-    'left-index': 'f',
-    'right-index': 'j',
-    'right-middle': 'k',
-    'right-ring': 'l',
-    'right-pinky': ';',
-  };
-
-  Offset _keyCenter(Size size, String rawKey) {
-    final key = KeyboardData.baseKey(rawKey);
-    if (key == ' ') {
-      return Offset(size.width / 2, _rowY(4));
-    }
-    for (var row = 0; row < 4; row++) {
-      final keys = KeyboardData.keyboardRows[row];
-      final index = keys.indexOf(key);
-      if (index < 0) continue;
-      final indent = switch (row) {
-        1 => keySize * 0.5,
-        2 => keySize * 0.8,
-        3 => keySize * 1.25,
-        _ => 0.0,
-      };
-      final unit = keySize + gap * 2;
-      final rowWidth = keys.length * unit + indent;
-      final left = (size.width - rowWidth) / 2 + indent;
-      return Offset(left + gap + keySize / 2 + index * unit, _rowY(row));
-    }
-    return Offset(size.width / 2, _rowY(2));
-  }
-
-  double _rowY(int row) {
-    final rowHeight = keySize + gap * 2;
-    return padding + row * (rowHeight + gap) + gap + keySize / 2;
-  }
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final activeFinger = activeKey == null
-        ? null
-        : KeyboardData.keyToFinger[KeyboardData.baseKey(activeKey!)];
-    final skin = const Color(0xFFFFC98C);
-    final outline = const Color(0xFFB96F35);
-    final activeColor = activeFinger == null
-        ? AppColors.secondary
-        : KeyboardData.fingerColor(activeFinger);
-
-    final leftHome = [_keyCenter(size, 'a'), _keyCenter(size, 'f')];
-    final rightHome = [_keyCenter(size, 'j'), _keyCenter(size, ';')];
-    final baseY = _rowY(3) + keySize * 0.92;
-    final palmY = math.min(
-      size.height + keySize * 0.18,
-      baseY + keySize * 0.78,
-    );
-    final leftPalmX = (leftHome.first.dx + leftHome.last.dx) / 2;
-    final rightPalmX = (rightHome.first.dx + rightHome.last.dx) / 2;
-    _drawPalm(
-      canvas,
-      Offset(leftPalmX, palmY),
-      keySize * 4.45,
-      keySize * 1.85,
-      skin,
-      outline,
-    );
-    _drawPalm(
-      canvas,
-      Offset(rightPalmX, palmY),
-      keySize * 4.45,
-      keySize * 1.85,
-      skin,
-      outline,
-    );
-
-    final entries = _homeKeys.entries.toList();
-    for (var i = 0; i < entries.length; i++) {
-      final entry = entries[i];
-      final home = _keyCenter(size, entry.value);
-      final isActive = activeFinger == entry.key;
-      final target = isActive && activeKey != null
-          ? _keyCenter(size, activeKey!)
-          : home;
-      final base = Offset(home.dx, baseY);
-      _drawFinger(
-        canvas,
-        base,
-        target,
-        keySize * (isActive ? 0.48 : 0.42),
-        skin,
-        outline,
-        isActive ? activeColor : null,
-      );
-    }
-
-    if (activeFinger == 'thumb') {
-      final space = _keyCenter(size, ' ');
-      _drawFinger(
-        canvas,
-        Offset(leftPalmX + keySize * 1.35, palmY - keySize * 0.42),
-        space - Offset(keySize * 0.42, 0),
-        keySize * 0.46,
-        skin,
-        outline,
-        activeColor,
-      );
-    }
-  }
-
-  void _drawPalm(
-    Canvas canvas,
-    Offset center,
-    double width,
-    double height,
-    Color skin,
-    Color outline,
-  ) {
-    final rect = RRect.fromRectAndRadius(
-      Rect.fromCenter(center: center, width: width, height: height),
-      Radius.circular(height * 0.38),
-    );
-    canvas.drawRRect(rect, Paint()..color = skin.withValues(alpha: 0.15));
-    canvas.drawRRect(
-      rect,
-      Paint()
-        ..color = outline.withValues(alpha: 0.24)
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 1.6,
-    );
-  }
-
-  void _drawFinger(
-    Canvas canvas,
-    Offset base,
-    Offset tip,
-    double width,
-    Color skin,
-    Color outline,
-    Color? active,
-  ) {
-    final control = Offset((base.dx + tip.dx) / 2, (base.dy + tip.dy) / 2);
-    final path = Path()
-      ..moveTo(base.dx, base.dy)
-      ..quadraticBezierTo(control.dx, control.dy, tip.dx, tip.dy);
-    if (active != null) {
-      canvas.drawPath(
-        path,
-        Paint()
-          ..color = active.withValues(alpha: 0.16)
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = width + 10
-          ..strokeCap = StrokeCap.round
-          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 5),
-      );
-    }
-    canvas.drawPath(
-      path,
-      Paint()
-        ..color = (active ?? skin).withValues(
-          alpha: active == null ? 0.16 : 0.42,
-        )
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = width
-        ..strokeCap = StrokeCap.round,
-    );
-    canvas.drawPath(
-      path,
-      Paint()
-        ..color = (active ?? outline).withValues(
-          alpha: active == null ? 0.24 : 0.72,
-        )
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 1.4
-        ..strokeCap = StrokeCap.round,
-    );
-  }
-
-  @override
-  bool shouldRepaint(covariant _KeyboardHandsPainter oldDelegate) =>
-      oldDelegate.activeKey != activeKey || oldDelegate.keySize != keySize;
 }
