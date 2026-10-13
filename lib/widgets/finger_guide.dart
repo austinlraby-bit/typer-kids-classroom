@@ -37,11 +37,13 @@ class FingerGuide extends StatelessWidget {
                 _HandDiagram(
                   isLeft: true,
                   activeFinger: isLeft ? finger : (isThumb ? 'thumb' : null),
+                  currentKey: currentKey!,
                 ),
                 const SizedBox(width: 8),
                 _HandDiagram(
                   isLeft: false,
                   activeFinger: !isLeft ? finger : (isThumb ? 'thumb' : null),
+                  currentKey: currentKey!,
                 ),
               ],
             ),
@@ -75,14 +77,30 @@ class FingerGuide extends StatelessWidget {
 class _HandDiagram extends StatelessWidget {
   final bool isLeft;
   final String? activeFinger;
+  final String currentKey;
 
-  const _HandDiagram({required this.isLeft, this.activeFinger});
+  const _HandDiagram({
+    required this.isLeft,
+    required this.currentKey,
+    this.activeFinger,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return CustomPaint(
-      size: const Size(96, 74),
-      painter: _HandPainter(isLeft: isLeft, activeFinger: activeFinger),
+    return TweenAnimationBuilder<double>(
+      key: ValueKey('$isLeft-$currentKey'),
+      tween: Tween(begin: 0, end: 1),
+      duration: const Duration(milliseconds: 180),
+      curve: Curves.easeOutBack,
+      builder: (context, reachProgress, child) => CustomPaint(
+        size: const Size(96, 74),
+        painter: _HandPainter(
+          isLeft: isLeft,
+          activeFinger: activeFinger,
+          currentKey: currentKey,
+          reachProgress: reachProgress,
+        ),
+      ),
     );
   }
 }
@@ -90,8 +108,45 @@ class _HandDiagram extends StatelessWidget {
 class _HandPainter extends CustomPainter {
   final bool isLeft;
   final String? activeFinger;
+  final String currentKey;
+  final double reachProgress;
 
-  _HandPainter({required this.isLeft, this.activeFinger});
+  _HandPainter({
+    required this.isLeft,
+    required this.activeFinger,
+    required this.currentKey,
+    required this.reachProgress,
+  });
+
+  /// Deliberately exaggerated fingertip travel. This is a teaching cue, not
+  /// an anatomical simulation: children should be able to read "up", "down",
+  /// and "inward" at a glance on a small iPad screen.
+  static const Map<String, Offset> _keyReach = {
+    // Number row.
+    '`': Offset(-7, -18), '1': Offset(-4, -18),
+    '2': Offset(-3, -18), '3': Offset(-2, -18),
+    '4': Offset(-4, -18), '5': Offset(7, -18),
+    '6': Offset(-7, -18), '7': Offset(4, -18),
+    '8': Offset(2, -18), '9': Offset(3, -18),
+    '0': Offset(4, -18), '-': Offset(8, -18), '=': Offset(11, -18),
+    // Top row.
+    'q': Offset(-4, -10), 'w': Offset(-3, -10),
+    'e': Offset(-2, -10), 'r': Offset(-4, -10),
+    't': Offset(7, -10), 'y': Offset(-7, -10),
+    'u': Offset(4, -10), 'i': Offset(2, -10),
+    'o': Offset(3, -10), 'p': Offset(4, -10),
+    '[': Offset(8, -10), ']': Offset(11, -10), '\\': Offset(13, -10),
+    // Home row. The index fingers visibly travel inward for G and H.
+    'a': Offset.zero, 's': Offset.zero, 'd': Offset.zero,
+    'f': Offset.zero, 'g': Offset(8, 0), 'h': Offset(-8, 0),
+    'j': Offset.zero, 'k': Offset.zero, 'l': Offset.zero,
+    ';': Offset.zero, "'": Offset(6, 0),
+    // Bottom row.
+    'z': Offset(3, 9), 'x': Offset(2, 9), 'c': Offset(1, 9),
+    'v': Offset(3, 9), 'b': Offset(9, 9), 'n': Offset(-9, 9),
+    'm': Offset(-3, 9), ',': Offset(-2, 9), '.': Offset(-1, 9),
+    '/': Offset(4, 9),
+  };
 
   // Wider, gently angled fingers approximate a relaxed palm-down typing
   // posture. The thumb points inward toward the spacebar instead of standing
@@ -138,9 +193,13 @@ class _HandPainter extends CustomPainter {
     for (final spec in fingers) {
       final isActive = activeFinger == spec.fingerName;
       final color = KeyboardData.fingerColor(spec.fingerName);
+      final reach = isActive
+          ? (_keyReach[KeyboardData.baseKey(currentKey)] ?? Offset.zero) *
+                reachProgress
+          : Offset.zero;
 
-      final cx = size.width * spec.centerXFrac;
-      final top = size.height * spec.topFrac;
+      final cx = size.width * spec.centerXFrac + reach.dx * 0.55;
+      final top = size.height * spec.topFrac + reach.dy;
       final h = size.height * spec.heightFrac;
       final w = spec.width.toDouble();
 
@@ -151,7 +210,7 @@ class _HandPainter extends CustomPainter {
 
       canvas.save();
       canvas.translate(cx, top + h / 2);
-      canvas.rotate(spec.rotation);
+      canvas.rotate(spec.rotation + reach.dx * 0.012);
 
       // Glow for active finger
       if (isActive) {
@@ -274,7 +333,10 @@ class _HandPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _HandPainter oldDelegate) =>
-      activeFinger != oldDelegate.activeFinger || isLeft != oldDelegate.isLeft;
+      activeFinger != oldDelegate.activeFinger ||
+      currentKey != oldDelegate.currentKey ||
+      reachProgress != oldDelegate.reachProgress ||
+      isLeft != oldDelegate.isLeft;
 }
 
 class _FingerSpec {

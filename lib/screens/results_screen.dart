@@ -787,45 +787,66 @@ class _Pokeball extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final border = size * 0.075;
-    return Container(
+    return SizedBox(
       width: size,
       height: size,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: Colors.white,
-        border: Border.all(color: const Color(0xFF152238), width: border),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x33000000),
-            blurRadius: 12,
-            offset: Offset(0, 7),
-          ),
-        ],
-      ),
-      clipBehavior: Clip.antiAlias,
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          Align(
-            alignment: Alignment.topCenter,
-            child: Container(height: size / 2, color: AppColors.primary),
-          ),
-          Container(height: border * 1.15, color: const Color(0xFF152238)),
-          Container(
-            width: size * 0.34,
-            height: size * 0.34,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: Colors.white,
-              border: Border.all(
-                color: const Color(0xFF152238),
-                width: border * 0.8,
-              ),
-            ),
-          ),
-        ],
-      ),
+      child: CustomPaint(painter: const _PokeballPainter()),
     );
   }
+}
+
+class _PokeballPainter extends CustomPainter {
+  const _PokeballPainter();
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    const ink = Color(0xFF152238);
+    final center = size.center(Offset.zero);
+    final radius = size.shortestSide / 2;
+    final border = size.shortestSide * 0.075;
+    final circle = Rect.fromCircle(center: center, radius: radius - border / 2);
+
+    canvas.drawCircle(
+      center + Offset(0, size.height * 0.07),
+      radius * 0.91,
+      Paint()
+        ..color = const Color(0x33000000)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 7),
+    );
+
+    canvas.save();
+    canvas.clipPath(Path()..addOval(circle), doAntiAlias: true);
+    canvas.drawRect(circle, Paint()..color = Colors.white);
+    canvas.drawRect(
+      Rect.fromLTRB(circle.left, circle.top, circle.right, center.dy),
+      Paint()..color = AppColors.primary,
+    );
+    canvas.drawRect(
+      Rect.fromCenter(
+        center: center,
+        width: circle.width,
+        height: border * 1.15,
+      ),
+      Paint()..color = ink,
+    );
+    canvas.restore();
+
+    canvas.drawOval(
+      circle,
+      Paint()
+        ..color = ink
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = border,
+    );
+
+    canvas.drawCircle(center, size.shortestSide * 0.17, Paint()..color = ink);
+    canvas.drawCircle(
+      center,
+      size.shortestSide * 0.095,
+      Paint()..color = Colors.white,
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant _PokeballPainter oldDelegate) => false;
 }

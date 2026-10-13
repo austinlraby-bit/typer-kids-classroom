@@ -9,7 +9,10 @@ class PokemonProvider extends ChangeNotifier {
   PokemonProvider(Map<String, dynamic> state) {
     _apply(state);
     ClassroomBridge.instance.onPokemonUpdate = (value) {
-      _apply(value);
+      // Activity-time updates can have been loaded by the host just before an
+      // encounter finished. Never let that older snapshot make a Pokémon
+      // disappear from the student's freshly updated Pokédex.
+      _apply(value, preserveLocalCollection: true);
       notifyListeners();
     };
   }
@@ -202,21 +205,27 @@ class PokemonProvider extends ChangeNotifier {
     }
   }
 
-  void _apply(Map<String, dynamic> s) {
+  void _apply(Map<String, dynamic> s, {bool preserveLocalCollection = false}) {
     final raw = (s['caught'] as Map?) ?? {};
-    caught = {
+    final incomingCaught = <int, DateTime>{
       for (final e in raw.entries)
         int.parse('${e.key}'): DateTime.fromMillisecondsSinceEpoch(
           ((e.value as num?)?.toInt() ?? 0) * 1000,
         ),
     };
-    claimedRewards = {
+    caught = preserveLocalCollection
+        ? (<int, DateTime>{...caught, ...incomingCaught})
+        : incomingCaught;
+    final incomingRewards = <String>{
       for (final item in (s['transactions'] as List?) ?? const [])
         if (item is String)
           item
         else if (item is Map && item['id'] != null)
           '${item['id']}',
     };
+    claimedRewards = preserveLocalCollection
+        ? (<String>{...claimedRewards, ...incomingRewards})
+        : incomingRewards;
     accuracyRecords = {
       for (final entry in ((s['accuracyRecords'] as Map?) ?? {}).entries)
         '${entry.key}': (entry.value as num?)?.toInt() ?? 0,
