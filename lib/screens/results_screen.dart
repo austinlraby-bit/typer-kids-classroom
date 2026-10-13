@@ -121,7 +121,20 @@ class _ResultsScreenState extends State<ResultsScreen>
     setState(() => _checkingRewards = true);
     final catchAnimation = _encounterController.forward(from: 0);
     try {
-      if (wantsLesson) {
+      // One completed activity is one encounter. Milestone rewards take
+      // priority, followed by the normal lesson reward, then accuracy.
+      if (wantsUnit) {
+        final unitCatch = await provider.claim(
+          source: 'unit',
+          eventId: unitEvent,
+          lessonId: widget.lesson.id,
+          unit: unit,
+        );
+        if (unitCatch != null) {
+          _caught.add(unitCatch);
+          unawaited(ClassroomBridge.instance.spriteDataUrl(unitCatch.id));
+        }
+      } else if (wantsLesson) {
         final lessonCatch = await provider.claim(
           source: 'lesson',
           eventId: lessonEvent,
@@ -131,19 +144,7 @@ class _ResultsScreenState extends State<ResultsScreen>
           _caught.add(lessonCatch);
           unawaited(ClassroomBridge.instance.spriteDataUrl(lessonCatch.id));
         }
-      }
-      if (wantsUnit) {
-        final unitCatch = await provider.claim(
-          source: 'unit',
-          eventId: unitEvent,
-          unit: unit,
-        );
-        if (unitCatch != null) {
-          _caught.add(unitCatch);
-          unawaited(ClassroomBridge.instance.spriteDataUrl(unitCatch.id));
-        }
-      }
-      if (wantsAccuracy) {
+      } else if (wantsAccuracy) {
         final accuracyCatch = await provider.claim(
           source: 'accuracy',
           eventId: accuracyEvent,

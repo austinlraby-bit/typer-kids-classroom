@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -89,20 +91,11 @@ class KeyboardWidget extends StatelessWidget {
         keyboard,
         Positioned.fill(
           child: IgnorePointer(
-            child: Align(
-              alignment: Alignment.bottomCenter,
-              child: FractionallySizedBox(
-                widthFactor: 0.72,
-                heightFactor: 0.98,
-                child: Opacity(
-                  opacity: 0.28,
-                  child: Image.asset(
-                    'assets/images/typing_hands.png',
-                    fit: BoxFit.fill,
-                    filterQuality: FilterQuality.high,
-                  ),
-                ),
-              ),
+            child: _LayeredGloveOverlay(
+              keySize: keySize,
+              gap: _gap,
+              padding: _padding,
+              activeKey: activeKey,
             ),
           ),
         ),
@@ -216,6 +209,138 @@ class KeyboardWidget extends StatelessWidget {
             fontSize: _fontSize * 0.85,
             fontWeight: FontWeight.w500,
             color: isActive ? Colors.white : Colors.grey.shade600,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _LayeredGloveOverlay extends StatelessWidget {
+  final double keySize;
+  final double gap;
+  final double padding;
+  final String? activeKey;
+
+  const _LayeredGloveOverlay({
+    required this.keySize,
+    required this.gap,
+    required this.padding,
+    required this.activeKey,
+  });
+
+  static const _homeKeys = <String, String>{
+    'left-pinky': 'a',
+    'left-ring': 's',
+    'left-middle': 'd',
+    'left-index': 'f',
+    'right-index': 'j',
+    'right-middle': 'k',
+    'right-ring': 'l',
+    'right-pinky': ';',
+  };
+
+  double _rowY(int row) {
+    final rowHeight = keySize + gap * 2;
+    return padding + row * (rowHeight + gap) + gap + keySize / 2;
+  }
+
+  Offset _keyCenter(Size size, String rawKey) {
+    final key = KeyboardData.baseKey(rawKey);
+    if (key == ' ') return Offset(size.width / 2, _rowY(4));
+    for (var row = 0; row < 4; row++) {
+      final keys = KeyboardData.keyboardRows[row];
+      final index = keys.indexOf(key);
+      if (index < 0) continue;
+      final indent = switch (row) {
+        1 => keySize * 0.5,
+        2 => keySize * 0.8,
+        3 => keySize * 1.25,
+        _ => 0.0,
+      };
+      final unit = keySize + gap * 2;
+      final rowWidth = keys.length * unit + indent;
+      final left = (size.width - rowWidth) / 2 + indent;
+      return Offset(left + gap + keySize / 2 + index * unit, _rowY(row));
+    }
+    return Offset(size.width / 2, _rowY(2));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final size = constraints.biggest;
+        final activeFinger = activeKey == null
+            ? null
+            : KeyboardData.keyToFinger[KeyboardData.baseKey(activeKey!)];
+        final fingers = <Widget>[];
+        for (final entry in _homeKeys.entries) {
+          final home = _keyCenter(size, entry.value);
+          final active = activeFinger == entry.key && activeKey != null;
+          final target = active ? _keyCenter(size, activeKey!) : home;
+          final base = Offset(home.dx, _rowY(2) + keySize * 1.28);
+          fingers.add(_finger(base: base, tip: target, active: active));
+        }
+        if (activeFinger == 'thumb') {
+          final target = _keyCenter(size, ' ');
+          fingers.add(
+            _finger(
+              base: Offset(size.width / 2 - keySize * 0.75, _rowY(3)),
+              tip: target - Offset(keySize * 0.45, 0),
+              active: true,
+            ),
+          );
+        }
+        return ClipRect(
+          child: Stack(
+            clipBehavior: Clip.hardEdge,
+            children: [
+              ...fingers,
+              Positioned(
+                left: size.width / 2 - keySize * 5.0,
+                top: _rowY(2) + keySize * 0.95,
+                width: keySize * 10,
+                height: keySize * 5,
+                child: Opacity(
+                  opacity: 0.24,
+                  child: Image.asset(
+                    'assets/images/typing_glove_palms.png',
+                    fit: BoxFit.fill,
+                    filterQuality: FilterQuality.high,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _finger({
+    required Offset base,
+    required Offset tip,
+    required bool active,
+  }) {
+    final delta = tip - base;
+    final length = delta.distance + keySize * 0.16;
+    final angle = math.atan2(delta.dy, delta.dx) + math.pi / 2;
+    final width = keySize * (active ? 0.48 : 0.38);
+    return Positioned(
+      left: base.dx - width / 2,
+      top: base.dy - length,
+      width: width,
+      height: length,
+      child: Transform.rotate(
+        angle: angle,
+        alignment: Alignment.bottomCenter,
+        child: Opacity(
+          opacity: active ? 0.52 : 0.18,
+          child: Image.asset(
+            'assets/images/typing_glove_finger.png',
+            fit: BoxFit.fill,
+            filterQuality: FilterQuality.high,
           ),
         ),
       ),

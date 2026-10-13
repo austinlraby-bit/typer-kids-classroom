@@ -26,6 +26,7 @@ class PokemonProvider extends ChangeNotifier {
   bool busy = false;
   String? error;
   final Set<String> _pendingClaims = {};
+  final Set<String> _claimingEvents = {};
 
   Future<void> load() async {
     catalog = await PokemonCatalog.load();
@@ -48,57 +49,66 @@ class PokemonProvider extends ChangeNotifier {
     String? lessonId,
     int? unit,
   }) async {
-    final optimistic = _chooseOptimistic(source, eventId, unit);
-    if (optimistic != null) {
-      caught[optimistic.id] = DateTime.now();
-      claimedRewards.add(eventId);
-      if (companionId == 0) companionId = optimistic.id;
-      error = null;
-      notifyListeners();
-      unawaited(
-        _retryClaimQuietly(
-          source: source,
-          eventId: eventId,
-          lessonId: lessonId,
-          unit: unit,
-          preferredPokemonId: optimistic.id,
-        ),
-      );
-      return optimistic;
+    // The server is idempotent too, but blocking here prevents a second
+    // optimistic Pokémon from briefly appearing after double taps/retries.
+    if (claimedRewards.contains(eventId) || !_claimingEvents.add(eventId)) {
+      return null;
     }
-
-    busy = true;
-    error = null;
-    notifyListeners();
-    final r = await ClassroomBridge.instance.claimPokemon(
-      source: source,
-      eventId: eventId,
-      lessonId: lessonId,
-      unit: unit,
-    );
-    busy = false;
-    if (r['ok'] != true) {
-      final message = '${r['error'] ?? 'Could not start the encounter.'}';
-      if (_isTemporaryClaimError(message)) {
+    try {
+      final optimistic = _chooseOptimistic(source, eventId, unit);
+      if (optimistic != null) {
+        caught[optimistic.id] = DateTime.now();
+        claimedRewards.add(eventId);
+        if (companionId == 0) companionId = optimistic.id;
         error = null;
+        notifyListeners();
         unawaited(
           _retryClaimQuietly(
             source: source,
             eventId: eventId,
             lessonId: lessonId,
             unit: unit,
+            preferredPokemonId: optimistic.id,
           ),
         );
-      } else {
-        error = message;
+        return optimistic;
       }
+
+      busy = true;
+      error = null;
       notifyListeners();
-      return null;
+      final r = await ClassroomBridge.instance.claimPokemon(
+        source: source,
+        eventId: eventId,
+        lessonId: lessonId,
+        unit: unit,
+      );
+      busy = false;
+      if (r['ok'] != true) {
+        final message = '${r['error'] ?? 'Could not start the encounter.'}';
+        if (_isTemporaryClaimError(message)) {
+          error = null;
+          unawaited(
+            _retryClaimQuietly(
+              source: source,
+              eventId: eventId,
+              lessonId: lessonId,
+              unit: unit,
+            ),
+          );
+        } else {
+          error = message;
+        }
+        notifyListeners();
+        return null;
+      }
+      _apply((r['pokemon'] as Map?)?.cast<String, dynamic>() ?? {});
+      final id = (r['caughtId'] as num?)?.toInt();
+      notifyListeners();
+      return id == null ? null : byId(id);
+    } finally {
+      _claimingEvents.remove(eventId);
     }
-    _apply((r['pokemon'] as Map?)?.cast<String, dynamic>() ?? {});
-    final id = (r['caughtId'] as num?)?.toInt();
-    notifyListeners();
-    return id == null ? null : byId(id);
   }
 
   PokemonSpecies? _chooseOptimistic(String source, String eventId, int? unit) {
