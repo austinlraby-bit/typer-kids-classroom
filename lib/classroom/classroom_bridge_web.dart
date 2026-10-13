@@ -43,6 +43,7 @@ class ClassroomBridge {
   final Map<String, Completer<Map<String, dynamic>>> _requests = {};
   final Map<int, String> _spriteCache = {};
   final Map<int, Future<String?>> _spriteRequests = {};
+  String? _studentId;
   void Function(Map<String, dynamic>)? onPokemonUpdate;
   void Function(Map<String, dynamic>)? onActivityUpdate;
 
@@ -103,6 +104,7 @@ class ClassroomBridge {
       }
       final student =
           (message['student'] as Map?)?.cast<String, dynamic>() ?? {};
+      _studentId = '${student['id'] ?? ''}';
       final progress =
           (message['progress'] as Map?)?.cast<String, dynamic>() ?? {};
       final profile =
@@ -121,6 +123,7 @@ class ClassroomBridge {
               (message['activity'] as Map?)?.cast<String, dynamic>() ?? {},
         ),
       );
+      Timer(const Duration(seconds: 1), _replayPendingPokemonClaims);
     } catch (_) {
       // Ignore unrelated messages from the host page.
     }
@@ -152,7 +155,7 @@ class ClassroomBridge {
     String? lessonId,
     int? unit,
     int? preferredPokemonId,
-  }) {
+  }) async {
     final payload = <String, dynamic>{'source': source, 'eventId': eventId};
     payload.addAll(
       {
@@ -161,7 +164,63 @@ class ClassroomBridge {
         'preferredPokemonId': preferredPokemonId,
       }..removeWhere((_, value) => value == null),
     );
-    return _request('pokemon-claim', payload);
+    if (preferredPokemonId != null) _storePendingPokemonClaim(payload);
+    final result = await _request('pokemon-claim', payload);
+    if (result['ok'] == true) _removePendingPokemonClaim(eventId);
+    return result;
+  }
+
+  String? get _pendingPokemonKey {
+    final id = _studentId;
+    return id == null || id.isEmpty ? null : 'pokemon-pending:$id';
+  }
+
+  List<Map<String, dynamic>> _pendingPokemonClaims() {
+    final key = _pendingPokemonKey;
+    if (key == null) return [];
+    try {
+      final decoded = jsonDecode(html.window.localStorage[key] ?? '[]') as List;
+      return decoded
+          .whereType<Map>()
+          .map((item) => item.cast<String, dynamic>())
+          .toList();
+    } catch (_) {
+      return [];
+    }
+  }
+
+  void _storePendingPokemonClaim(Map<String, dynamic> payload) {
+    final key = _pendingPokemonKey;
+    if (key == null) return;
+    final claims = _pendingPokemonClaims()
+      ..removeWhere((item) => item['eventId'] == payload['eventId'])
+      ..add(Map<String, dynamic>.from(payload));
+    html.window.localStorage[key] = jsonEncode(claims.take(50).toList());
+  }
+
+  void _removePendingPokemonClaim(String eventId) {
+    final key = _pendingPokemonKey;
+    if (key == null) return;
+    final claims = _pendingPokemonClaims()
+      ..removeWhere((item) => item['eventId'] == eventId);
+    if (claims.isEmpty) {
+      html.window.localStorage.remove(key);
+    } else {
+      html.window.localStorage[key] = jsonEncode(claims);
+    }
+  }
+
+  Future<void> _replayPendingPokemonClaims() async {
+    for (final claim in List<Map<String, dynamic>>.from(
+      _pendingPokemonClaims(),
+    )) {
+      final result = await _request('pokemon-claim', claim);
+      if (result['ok'] == true) {
+        _removePendingPokemonClaim('${claim['eventId']}');
+        final pokemon = (result['pokemon'] as Map?)?.cast<String, dynamic>();
+        if (pokemon != null) onPokemonUpdate?.call(pokemon);
+      }
+    }
   }
 
   Future<Map<String, dynamic>> updatePokemonPreferences({
