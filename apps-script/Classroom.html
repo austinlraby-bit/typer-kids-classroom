@@ -211,7 +211,8 @@
       if (data.type === 'pokemon-claim') {
         await flushAllProgress();
         result = await call('claimPokemon', state.token, {
-          source: data.source, eventId: data.eventId, lessonId: data.lessonId, unit: data.unit
+          source: data.source, eventId: data.eventId, lessonId: data.lessonId, unit: data.unit,
+          preferredPokemonId: data.preferredPokemonId
         });
       } else {
         result = await call('updatePokemonPreferences', state.token, {

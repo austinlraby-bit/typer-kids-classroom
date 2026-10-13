@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:confetti/confetti.dart';
 import 'package:flutter/material.dart';
@@ -35,6 +36,7 @@ class _ResultsScreenState extends State<ResultsScreen>
   late ConfettiController _confettiController;
   late AnimationController _slideController;
   late AnimationController _encounterController;
+  late Animation<double> _pokeballWiggle;
   late Animation<Offset> _slideAnimation;
   final FocusNode _focusNode = FocusNode();
   final List<PokemonSpecies> _caught = [];
@@ -51,9 +53,29 @@ class _ResultsScreenState extends State<ResultsScreen>
       vsync: this,
     );
     _encounterController = AnimationController(
-      duration: const Duration(milliseconds: 850),
+      duration: const Duration(milliseconds: 2100),
       vsync: this,
     );
+    _pokeballWiggle =
+        TweenSequence<double>([
+          TweenSequenceItem(tween: ConstantTween(0), weight: 10),
+          TweenSequenceItem(tween: Tween(begin: 0, end: -0.16), weight: 7),
+          TweenSequenceItem(tween: Tween(begin: -0.16, end: 0.16), weight: 12),
+          TweenSequenceItem(tween: Tween(begin: 0.16, end: 0), weight: 7),
+          TweenSequenceItem(tween: ConstantTween(0), weight: 12),
+          TweenSequenceItem(tween: Tween(begin: 0, end: -0.12), weight: 6),
+          TweenSequenceItem(tween: Tween(begin: -0.12, end: 0.12), weight: 10),
+          TweenSequenceItem(tween: Tween(begin: 0.12, end: 0), weight: 6),
+          TweenSequenceItem(tween: ConstantTween(0), weight: 14),
+          TweenSequenceItem(tween: Tween(begin: 0, end: -0.08), weight: 5),
+          TweenSequenceItem(tween: Tween(begin: -0.08, end: 0.08), weight: 7),
+          TweenSequenceItem(tween: Tween(begin: 0.08, end: 0), weight: 4),
+        ]).animate(
+          CurvedAnimation(
+            parent: _encounterController,
+            curve: Curves.easeInOut,
+          ),
+        );
     _slideAnimation =
         Tween<Offset>(begin: const Offset(0, 0.5), end: Offset.zero).animate(
           CurvedAnimation(parent: _slideController, curve: Curves.easeOutCubic),
@@ -97,7 +119,7 @@ class _ResultsScreenState extends State<ResultsScreen>
     if (!wantsLesson && !wantsUnit && !wantsAccuracy) return;
 
     setState(() => _checkingRewards = true);
-    _encounterController.repeat();
+    final catchAnimation = _encounterController.forward(from: 0);
     try {
       if (wantsLesson) {
         final lessonCatch = await provider.claim(
@@ -133,6 +155,7 @@ class _ResultsScreenState extends State<ResultsScreen>
         }
       }
     } finally {
+      await catchAnimation;
       if (mounted) {
         _encounterController.stop();
         setState(() => _checkingRewards = false);
@@ -352,9 +375,13 @@ class _ResultsScreenState extends State<ResultsScreen>
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  RotationTransition(
-                    turns: _encounterController,
+                  AnimatedBuilder(
+                    animation: _pokeballWiggle,
                     child: const _Pokeball(size: 84),
+                    builder: (context, child) => Transform.rotate(
+                      angle: _pokeballWiggle.value * math.pi,
+                      child: child,
+                    ),
                   ),
                   const SizedBox(height: 18),
                   Text(

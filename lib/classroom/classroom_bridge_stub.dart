@@ -34,6 +34,7 @@ class ClassroomBridge {
     required String eventId,
     String? lessonId,
     int? unit,
+    int? preferredPokemonId,
   }) async => {'ok': false};
   Future<Map<String, dynamic>> updatePokemonPreferences({
     int? selectedRegion,

@@ -151,11 +151,15 @@ class ClassroomBridge {
     required String eventId,
     String? lessonId,
     int? unit,
+    int? preferredPokemonId,
   }) {
     final payload = <String, dynamic>{'source': source, 'eventId': eventId};
     payload.addAll(
-      {'lessonId': lessonId, 'unit': unit}
-        ..removeWhere((_, value) => value == null),
+      {
+        'lessonId': lessonId,
+        'unit': unit,
+        'preferredPokemonId': preferredPokemonId,
+      }..removeWhere((_, value) => value == null),
     );
     return _request('pokemon-claim', payload);
   }

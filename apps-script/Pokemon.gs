@@ -126,9 +126,13 @@ function claimPokemon(token, request) {
 
       const unlocked = unlockedRegionCount_(completed.length);
       state.selectedRegion = Math.max(0, Math.min(unlocked - 1, Number(state.selectedRegion) || 0));
-      const pokemonId = choosePokemon_(state, special, eventId);
+      const range = POKEMON_RANGES_[state.selectedRegion] || POKEMON_RANGES_[0];
+      const preferred = Math.floor(Number(request.preferredPokemonId) || 0);
+      const preferredIsSpecial = POKEMON_SPECIAL_.indexOf(preferred) !== -1;
+      const preferredAllowed = preferred >= range[0] && preferred <= range[1] &&
+        !state.caught[String(preferred)] && (special ? preferredIsSpecial : !preferredIsSpecial);
+      const pokemonId = preferredAllowed ? preferred : choosePokemon_(state, special, eventId);
       if (!pokemonId) {
-        const range = POKEMON_RANGES_[state.selectedRegion] || POKEMON_RANGES_[0];
         const uncaught = [];
         for (let id=range[0]; id<=range[1]; id++) if (!state.caught[String(id)]) uncaught.push(id);
         if (uncaught.length) {

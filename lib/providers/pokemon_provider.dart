@@ -48,6 +48,25 @@ class PokemonProvider extends ChangeNotifier {
     String? lessonId,
     int? unit,
   }) async {
+    final optimistic = _chooseOptimistic(source, eventId, unit);
+    if (optimistic != null) {
+      caught[optimistic.id] = DateTime.now();
+      claimedRewards.add(eventId);
+      if (companionId == 0) companionId = optimistic.id;
+      error = null;
+      notifyListeners();
+      unawaited(
+        _retryClaimQuietly(
+          source: source,
+          eventId: eventId,
+          lessonId: lessonId,
+          unit: unit,
+          preferredPokemonId: optimistic.id,
+        ),
+      );
+      return optimistic;
+    }
+
     busy = true;
     error = null;
     notifyListeners();
@@ -82,6 +101,37 @@ class PokemonProvider extends ChangeNotifier {
     return id == null ? null : byId(id);
   }
 
+  PokemonSpecies? _chooseOptimistic(String source, String eventId, int? unit) {
+    final special = source == 'unit' && (unit ?? 0) % 3 == 0;
+    var choices = catalog
+        .where(
+          (pokemon) =>
+              pokemon.generation == selectedRegion + 1 &&
+              !caught.containsKey(pokemon.id) &&
+              (special
+                  ? pokemon.legendary || pokemon.mythical
+                  : !pokemon.legendary && !pokemon.mythical),
+        )
+        .toList(growable: false);
+    if (choices.isEmpty && special) {
+      choices = catalog
+          .where(
+            (pokemon) =>
+                pokemon.generation == selectedRegion + 1 &&
+                !caught.containsKey(pokemon.id) &&
+                !pokemon.legendary &&
+                !pokemon.mythical,
+          )
+          .toList(growable: false);
+    }
+    if (choices.isEmpty) return null;
+    var hash = 0;
+    for (final unit in eventId.codeUnits) {
+      hash = ((hash * 37) + unit) & 0x7fffffff;
+    }
+    return choices[hash % choices.length];
+  }
+
   bool _isTemporaryClaimError(String message) {
     final lower = message.toLowerCase();
     return lower.contains('busy') ||
@@ -94,6 +144,7 @@ class PokemonProvider extends ChangeNotifier {
     required String eventId,
     String? lessonId,
     int? unit,
+    int? preferredPokemonId,
   }) async {
     if (!_pendingClaims.add(eventId)) return;
     try {
@@ -106,6 +157,7 @@ class PokemonProvider extends ChangeNotifier {
           eventId: eventId,
           lessonId: lessonId,
           unit: unit,
+          preferredPokemonId: preferredPokemonId,
         );
         if (result['ok'] == true) {
           _apply((result['pokemon'] as Map?)?.cast<String, dynamic>() ?? {});
