@@ -149,10 +149,10 @@ function weeklyLeaderboard_(currentStudentId) {
     .sort((a, b) => b.points - a.points || b.weeklySeconds - a.weeklySeconds || b.accuracy - a.accuracy || a.name.localeCompare(b.name));
   let rank = 0, prior = null;
   ranked.forEach((r, i) => { const key = `${r.points}:${r.weeklySeconds}:${r.accuracy}`; if (key !== prior) rank = i + 1; r.rank = rank; prior = key; });
-  const top = ranked.slice(0, 5);
+  const top = ranked.slice(0, 3);
   const self = ranked.find(r => r.id === String(currentStudentId));
   if (self && !top.some(r => r.id === self.id)) top.push(self);
-  return { rows: top.map(r => ({ rank: r.rank, name: r.name, weeklySeconds: r.weeklySeconds, accuracy: r.accuracy, points: r.points, companionId: r.companionId })), currentRank: self ? self.rank : 0, qualifyingStudents: ranked.length };
+  return { rows: top.map(r => ({ rank: r.rank, name: r.name, weeklySeconds: r.weeklySeconds, accuracy: r.accuracy, points: r.points, companionId: r.companionId, isCurrent: r.id === String(currentStudentId) })), currentRank: self ? self.rank : 0, qualifyingStudents: ranked.length };
 }
 
 function loadProgress_(studentId, name) {

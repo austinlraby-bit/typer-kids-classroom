@@ -466,6 +466,21 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildTrainerLeague(BuildContext context) {
     final activity = context.watch<OnTaskProvider>();
     final rows = activity.leaderboard;
+    Map<String, dynamic>? ranked(int rank) {
+      for (final row in rows) {
+        if ((row['rank'] as num?)?.toInt() == rank) return row;
+      }
+      return null;
+    }
+
+    Map<String, dynamic>? current;
+    for (final row in rows) {
+      if (row['isCurrent'] == true) {
+        current = row;
+        break;
+      }
+    }
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
@@ -510,18 +525,9 @@ class _HomeScreenState extends State<HomeScreen> {
                   ],
                 ),
               ),
-              if (activity.currentRank > 0)
-                Text(
-                  '#${activity.currentRank}',
-                  style: GoogleFonts.fredoka(
-                    fontSize: 24,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.primary,
-                  ),
-                ),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 18),
           if (rows.isEmpty)
             Text(
               'Complete one active minute to join the league!',
@@ -530,61 +536,172 @@ class _HomeScreenState extends State<HomeScreen> {
                 color: AppColors.textSecondary,
               ),
             )
-          else
-            ...rows.map((row) {
-              final rank = (row['rank'] as num?)?.toInt() ?? 0;
-              final medal = rank == 1
-                  ? '🥇'
-                  : rank == 2
-                  ? '🥈'
-                  : rank == 3
-                  ? '🥉'
-                  : '#$rank';
-              final minutes =
-                  ((row['weeklySeconds'] as num?)?.toInt() ?? 0) ~/ 60;
-              return Padding(
-                padding: const EdgeInsets.symmetric(vertical: 5),
-                child: Row(
-                  children: [
-                    SizedBox(
-                      width: 38,
-                      child: Text(
-                        medal,
-                        style: GoogleFonts.fredoka(
-                          fontSize: 17,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ),
-                    PokemonSprite(
-                      (row['companionId'] as num?)?.toInt() ?? 25,
-                      size: 34,
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        '${row['name']}',
-                        overflow: TextOverflow.ellipsis,
-                        style: GoogleFonts.nunito(fontWeight: FontWeight.w800),
-                      ),
-                    ),
-                    Text(
-                      '$minutes min • ${row['points']} pts',
-                      style: GoogleFonts.nunito(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.textSecondary,
-                      ),
-                    ),
-                  ],
-                ),
-              );
-            }),
-          const SizedBox(height: 8),
+          else ...[
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Expanded(child: _podiumPlace(ranked(2), 2, 120)),
+                const SizedBox(width: 6),
+                Expanded(child: _podiumPlace(ranked(1), 1, 154)),
+                const SizedBox(width: 6),
+                Expanded(child: _podiumPlace(ranked(3), 3, 102)),
+              ],
+            ),
+            const SizedBox(height: 18),
+            _currentStanding(current, activity.currentRank),
+          ],
+          const SizedBox(height: 10),
           Text(
-            'Only qualifying Trainers appear; nobody is shown in last place.',
+            'Complete one active minute to qualify. Your standing is always private to you.',
             style: GoogleFonts.nunito(
               fontSize: 12,
+              color: AppColors.textSecondary,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _podiumPlace(Map<String, dynamic>? row, int rank, double height) {
+    final colors = {
+      1: const Color(0xFFFFC928),
+      2: const Color(0xFFB9C7D8),
+      3: const Color(0xFFD99562),
+    };
+    final medals = {1: '🥇', 2: '🥈', 3: '🥉'};
+    final minutes = ((row?['weeklySeconds'] as num?)?.toInt() ?? 0) ~/ 60;
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.end,
+      children: [
+        Text(medals[rank]!, style: const TextStyle(fontSize: 31)),
+        PokemonSprite(
+          (row?['companionId'] as num?)?.toInt() ?? 25,
+          size: rank == 1 ? 56 : 46,
+        ),
+        Text(
+          row == null ? 'Open' : '${row['name']}',
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          textAlign: TextAlign.center,
+          style: GoogleFonts.fredoka(
+            fontSize: rank == 1 ? 17 : 15,
+            fontWeight: FontWeight.w700,
+            color: AppColors.textPrimary,
+          ),
+        ),
+        if (row != null)
+          Text(
+            '$minutes min • ${row['points']} pts',
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: GoogleFonts.nunito(
+              fontSize: 11,
+              fontWeight: FontWeight.w800,
+              color: AppColors.textSecondary,
+            ),
+          ),
+        const SizedBox(height: 7),
+        Container(
+          height: height,
+          width: double.infinity,
+          decoration: BoxDecoration(
+            color: colors[rank],
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(15)),
+            boxShadow: const [
+              BoxShadow(
+                color: Color(0x22000000),
+                blurRadius: 8,
+                offset: Offset(0, 4),
+              ),
+            ],
+          ),
+          alignment: Alignment.center,
+          child: Text(
+            '$rank',
+            style: GoogleFonts.fredoka(
+              fontSize: rank == 1 ? 56 : 45,
+              fontWeight: FontWeight.w700,
+              color: Colors.white,
+              shadows: const [
+                Shadow(color: Color(0x33000000), offset: Offset(0, 3)),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _currentStanding(Map<String, dynamic>? row, int currentRank) {
+    if (row == null || currentRank <= 0) {
+      return Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: AppColors.background,
+          borderRadius: BorderRadius.circular(14),
+        ),
+        child: Text(
+          'YOUR STANDING  •  Complete one active minute to join!',
+          textAlign: TextAlign.center,
+          style: GoogleFonts.nunito(
+            fontWeight: FontWeight.w800,
+            color: AppColors.textSecondary,
+          ),
+        ),
+      );
+    }
+    final minutes = ((row['weeklySeconds'] as num?)?.toInt() ?? 0) ~/ 60;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      decoration: BoxDecoration(
+        color: AppColors.primary.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: AppColors.primary.withValues(alpha: 0.25)),
+      ),
+      child: Row(
+        children: [
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'YOUR STANDING',
+                style: GoogleFonts.nunito(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w900,
+                  color: AppColors.primary,
+                ),
+              ),
+              Text(
+                '#$currentRank',
+                style: GoogleFonts.fredoka(
+                  fontSize: 28,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.primary,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(width: 12),
+          PokemonSprite((row['companionId'] as num?)?.toInt() ?? 25, size: 43),
+          const SizedBox(width: 9),
+          Expanded(
+            child: Text(
+              '${row['name']}',
+              overflow: TextOverflow.ellipsis,
+              style: GoogleFonts.nunito(
+                fontSize: 16,
+                fontWeight: FontWeight.w900,
+              ),
+            ),
+          ),
+          Text(
+            '$minutes min • ${row['points']} pts',
+            style: GoogleFonts.nunito(
+              fontSize: 12,
+              fontWeight: FontWeight.w800,
               color: AppColors.textSecondary,
             ),
           ),
