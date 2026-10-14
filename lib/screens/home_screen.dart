@@ -138,6 +138,8 @@ class _HomeScreenState extends State<HomeScreen> {
                         const SizedBox(height: 16),
                         _buildWeeklyOnTask(context),
                         const SizedBox(height: 16),
+                        _buildTrainerLeague(context),
+                        const SizedBox(height: 16),
                         _buildRegionSwitcher(context, progress),
                         const SizedBox(height: 28),
                         _buildContinueButton(context, progress),
@@ -454,6 +456,136 @@ class _HomeScreenState extends State<HomeScreen> {
               minHeight: 14,
               backgroundColor: Colors.white,
               color: progress >= 1 ? AppColors.correct : AppColors.secondary,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTrainerLeague(BuildContext context) {
+    final activity = context.watch<OnTaskProvider>();
+    final rows = activity.leaderboard;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: AppColors.primary.withValues(alpha: 0.25)),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x12000000),
+            blurRadius: 12,
+            offset: Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Text('🏆', style: TextStyle(fontSize: 28)),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Trainer League',
+                      style: GoogleFonts.fredoka(
+                        fontSize: 21,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                    Text(
+                      'This week • active typing + accuracy bonus',
+                      style: GoogleFonts.nunito(
+                        fontSize: 13,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              if (activity.currentRank > 0)
+                Text(
+                  '#${activity.currentRank}',
+                  style: GoogleFonts.fredoka(
+                    fontSize: 24,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.primary,
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          if (rows.isEmpty)
+            Text(
+              'Complete one active minute to join the league!',
+              style: GoogleFonts.nunito(
+                fontWeight: FontWeight.w700,
+                color: AppColors.textSecondary,
+              ),
+            )
+          else
+            ...rows.map((row) {
+              final rank = (row['rank'] as num?)?.toInt() ?? 0;
+              final medal = rank == 1
+                  ? '🥇'
+                  : rank == 2
+                  ? '🥈'
+                  : rank == 3
+                  ? '🥉'
+                  : '#$rank';
+              final minutes =
+                  ((row['weeklySeconds'] as num?)?.toInt() ?? 0) ~/ 60;
+              return Padding(
+                padding: const EdgeInsets.symmetric(vertical: 5),
+                child: Row(
+                  children: [
+                    SizedBox(
+                      width: 38,
+                      child: Text(
+                        medal,
+                        style: GoogleFonts.fredoka(
+                          fontSize: 17,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                    PokemonSprite(
+                      (row['companionId'] as num?)?.toInt() ?? 25,
+                      size: 34,
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        '${row['name']}',
+                        overflow: TextOverflow.ellipsis,
+                        style: GoogleFonts.nunito(fontWeight: FontWeight.w800),
+                      ),
+                    ),
+                    Text(
+                      '$minutes min • ${row['points']} pts',
+                      style: GoogleFonts.nunito(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }),
+          const SizedBox(height: 8),
+          Text(
+            'Only qualifying Trainers appear; nobody is shown in last place.',
+            style: GoogleFonts.nunito(
+              fontSize: 12,
+              color: AppColors.textSecondary,
             ),
           ),
         ],

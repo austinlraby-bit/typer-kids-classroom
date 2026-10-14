@@ -98,7 +98,61 @@ function weeklyActivity_(studentId) {
       if (String(r[0]) === studentId && r[1] instanceof Date && r[1] >= monday) seconds += Math.max(0, Number(r[2]) || 0);
     });
   }
-  return { weeklySeconds: Math.floor(seconds), weeklyGoalMinutes: weeklyGoal_() };
+  return {
+    weeklySeconds: Math.floor(seconds),
+    weeklyGoalMinutes: weeklyGoal_(),
+    leaderboard: weeklyLeaderboard_(studentId)
+  };
+}
+
+function weeklyLeaderboard_(currentStudentId) {
+  const ss = getSpreadsheet_();
+  const students = ss.getSheetByName(KQ.STUDENTS);
+  const sessions = ss.getSheetByName(KQ.SESSIONS);
+  const progress = ss.getSheetByName(KQ.PROGRESS);
+  const pokemon = ss.getSheetByName(KQ.POKEMON);
+  const now = new Date();
+  const monday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  monday.setDate(monday.getDate() - ((monday.getDay() + 6) % 7));
+
+  const roster = {};
+  if (students && students.getLastRow() >= 2) {
+    students.getRange(2, 1, students.getLastRow() - 1, 5).getDisplayValues().forEach(r => {
+      if (r[0] && String(r[4]).toLowerCase() !== 'false' && r[4] !== '0') {
+        roster[String(r[0])] = { name: `${r[1]}${r[2] ? ' ' + r[2] + '.' : ''}`, seconds: 0, accuracy: 0, companionId: 25 };
+      }
+    });
+  }
+  if (sessions && sessions.getLastRow() >= 2) {
+    sessions.getRange(2, 2, sessions.getLastRow() - 1, 3).getValues().forEach(r => {
+      const id = String(r[0]);
+      if (roster[id] && r[1] instanceof Date && r[1] >= monday) roster[id].seconds += Math.max(0, Number(r[2]) || 0);
+    });
+  }
+  if (progress && progress.getLastRow() >= 2) {
+    progress.getRange(2, 1, progress.getLastRow() - 1, 5).getValues().forEach(r => {
+      if (roster[String(r[0])]) roster[String(r[0])].accuracy = Math.max(0, Math.min(100, Number(r[4]) || 0));
+    });
+  }
+  if (pokemon && pokemon.getLastRow() >= 2) {
+    pokemon.getRange(2, 1, pokemon.getLastRow() - 1, 4).getValues().forEach(r => {
+      if (roster[String(r[0])]) roster[String(r[0])].companionId = Math.max(1, Number(r[3]) || 25);
+    });
+  }
+
+  const ranked = Object.keys(roster).map(id => {
+    const r = roster[id];
+    const minutes = Math.floor(r.seconds / 60);
+    const accuracyBonus = r.seconds >= 60 ? Math.max(0, Math.min(10, Math.floor((r.accuracy - 80) / 2))) : 0;
+    return { id: id, name: r.name, weeklySeconds: Math.floor(r.seconds), accuracy: r.accuracy, points: minutes * 2 + accuracyBonus, companionId: r.companionId };
+  }).filter(r => r.weeklySeconds >= 60)
+    .sort((a, b) => b.points - a.points || b.weeklySeconds - a.weeklySeconds || b.accuracy - a.accuracy || a.name.localeCompare(b.name));
+  let rank = 0, prior = null;
+  ranked.forEach((r, i) => { const key = `${r.points}:${r.weeklySeconds}:${r.accuracy}`; if (key !== prior) rank = i + 1; r.rank = rank; prior = key; });
+  const top = ranked.slice(0, 5);
+  const self = ranked.find(r => r.id === String(currentStudentId));
+  if (self && !top.some(r => r.id === self.id)) top.push(self);
+  return { rows: top.map(r => ({ rank: r.rank, name: r.name, weeklySeconds: r.weeklySeconds, accuracy: r.accuracy, points: r.points, companionId: r.companionId })), currentRank: self ? self.rank : 0, qualifyingStudents: ranked.length };
 }
 
 function loadProgress_(studentId, name) {
