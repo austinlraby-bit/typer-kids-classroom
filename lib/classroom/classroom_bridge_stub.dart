@@ -27,6 +27,8 @@ class ClassroomBridge {
   void Function(Map<String, dynamic>)? onPokemonUpdate;
   Future<ClassroomSession?> waitForSession() async => null;
   void queueSave(Map<String, dynamic> snapshot) {}
+
+  List<Map<String, dynamic>> pendingPokemonClaims() => const [];
   void setActivity(String activity) {}
   void logout() {}
   Future<Map<String, dynamic>> claimPokemon({

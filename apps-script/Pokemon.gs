@@ -103,31 +103,42 @@ function claimPokemon(token, request) {
         caughtId:priorTransaction.pokemonId || null, pokemon:state};
       const progress = loadProgress_(auth.studentId, auth.name);
       const completed = completedLessonIds_(progress);
+      const preferred = Math.floor(Number(request.preferredPokemonId) || 0);
+      // A preferred ID is the durable ticket created at the exact moment the
+      // child sees the instant catch. Progress and reward writes travel over
+      // separate requests, so the progress row can legitimately lag behind.
+      // Event IDs remain deterministic and transactions remain idempotent.
+      const instantTicket = preferred > 0;
       let special = false;
       if (source === 'lesson') {
         const lessonId = String(request.lessonId || '');
-        if (completed.indexOf(lessonId) === -1 || eventId !== 'lesson_' + safeEventPart_(lessonId)) throw new Error('Finish this lesson successfully before catching a Pokémon.');
+        if (eventId !== 'lesson_' + safeEventPart_(lessonId) ||
+            (completed.indexOf(lessonId) === -1 && !instantTicket)) throw new Error('Finish this lesson successfully before catching a Pokémon.');
         const lessonRow = progress.profile.typerKids && progress.profile.typerKids.progress && progress.profile.typerKids.progress[lessonId];
       } else if (source === 'practice') {
         if (state.unclaimedEncounters < 1) throw new Error('Keep practicing to earn your next encounter.');
         state.unclaimedEncounters--;
       } else if (source === 'unit') {
         const unit = Math.max(1, Math.floor(Number(request.unit) || 0));
-        if (completed.length < unit * 10 || eventId !== 'unit_reward_' + unit) throw new Error('Complete this lesson unit first.');
+        if (eventId !== 'unit_reward_' + unit ||
+            (completed.length < unit * 10 && !instantTicket)) throw new Error('Complete this lesson unit first.');
         special = unit % 3 === 0;
       } else if (source === 'accuracy') {
         const lessonId = String(request.lessonId || '');
         const row = progress.profile.typerKids && progress.profile.typerKids.progress && progress.profile.typerKids.progress[lessonId];
         const accuracy = Math.floor(Number(row && row.a) || 0);
         const prior = Math.floor(Number(state.accuracyRecords[lessonId]) || 0);
-        if (accuracy < 80 || accuracy < prior + 3) throw new Error('Beat your accuracy record by at least 3 points to earn this encounter.');
-        state.accuracyRecords[lessonId] = accuracy;
+        const prefix = 'accuracy_' + safeEventPart_(lessonId) + '_';
+        const band = eventId.indexOf(prefix) === 0 ? Math.floor(Number(eventId.slice(prefix.length)) || 0) : 0;
+        if ((accuracy < 80 || accuracy < prior + 3) && !(instantTicket && band >= 26)) throw new Error('Beat your accuracy record by at least 3 points to earn this encounter.');
+        state.accuracyRecords[lessonId] = Math.max(prior, accuracy, band * 3);
       } else throw new Error('That reward type is not valid.');
 
       const unlocked = unlockedRegionCount_(completed.length);
-      state.selectedRegion = Math.max(0, Math.min(unlocked - 1, Number(state.selectedRegion) || 0));
+      state.selectedRegion = Math.max(0, Math.min(
+        instantTicket ? POKEMON_RANGES_.length - 1 : unlocked - 1,
+        Number(state.selectedRegion) || 0));
       const range = POKEMON_RANGES_[state.selectedRegion] || POKEMON_RANGES_[0];
-      const preferred = Math.floor(Number(request.preferredPokemonId) || 0);
       const preferredIsSpecial = POKEMON_SPECIAL_.indexOf(preferred) !== -1;
       const preferredAllowed = preferred >= range[0] && preferred <= range[1] &&
         !state.caught[String(preferred)] && (special ? preferredIsSpecial : !preferredIsSpecial);

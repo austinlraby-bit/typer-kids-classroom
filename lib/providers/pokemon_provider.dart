@@ -8,6 +8,7 @@ import '../models/pokemon_species.dart';
 class PokemonProvider extends ChangeNotifier {
   PokemonProvider(Map<String, dynamic> state) {
     _apply(state);
+    _restorePendingCatches();
     ClassroomBridge.instance.onPokemonUpdate = (value) {
       // Activity-time updates can have been loaded by the host just before an
       // encounter finished. Never let that older snapshot make a Pokémon
@@ -16,6 +17,16 @@ class PokemonProvider extends ChangeNotifier {
       notifyListeners();
     };
   }
+
+  void _restorePendingCatches() {
+    for (final claim in ClassroomBridge.instance.pendingPokemonClaims()) {
+      final id = (claim['preferredPokemonId'] as num?)?.toInt();
+      final eventId = '${claim['eventId'] ?? ''}';
+      if (id != null && id > 0) caught.putIfAbsent(id, DateTime.now);
+      if (eventId.isNotEmpty) claimedRewards.add(eventId);
+    }
+  }
+
   Map<int, DateTime> caught = {};
   Set<String> claimedRewards = {};
   Map<String, int> accuracyRecords = {};

@@ -44,6 +44,7 @@ class ClassroomBridge {
   final Map<int, String> _spriteCache = {};
   final Map<int, Future<String?>> _spriteRequests = {};
   String? _studentId;
+  Timer? _pokemonReplayTimer;
   void Function(Map<String, dynamic>)? onPokemonUpdate;
   void Function(Map<String, dynamic>)? onActivityUpdate;
 
@@ -137,6 +138,11 @@ class ClassroomBridge {
       );
       _send({'type': 'typer-session-ready'});
       Timer(const Duration(seconds: 1), _replayPendingPokemonClaims);
+      _pokemonReplayTimer?.cancel();
+      _pokemonReplayTimer = Timer.periodic(
+        const Duration(seconds: 20),
+        (_) => _replayPendingPokemonClaims(),
+      );
     } catch (_) {
       // Ignore unrelated messages from the host page.
     }
@@ -201,6 +207,12 @@ class ClassroomBridge {
       return [];
     }
   }
+
+  /// Catches shown immediately but not yet acknowledged by the classroom
+  /// server. Reapplying them on startup prevents a refresh or brief outage
+  /// from making an earned Pokémon disappear from the Pokédex.
+  List<Map<String, dynamic>> pendingPokemonClaims() =>
+      List<Map<String, dynamic>>.from(_pendingPokemonClaims());
 
   void _storePendingPokemonClaim(Map<String, dynamic> payload) {
     final key = _pendingPokemonKey;
