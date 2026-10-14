@@ -1,6 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:typer_kids/data/badges.dart';
 import 'package:typer_kids/data/lesson_curriculum_comprehensive.dart';
+import 'package:typer_kids/data/game_unlocks.dart';
+import 'package:typer_kids/data/lesson_curriculum_selector.dart';
 import 'package:typer_kids/data/practice_generator.dart';
 import 'package:typer_kids/data/sentence_lists.dart';
 import 'package:typer_kids/data/story_content.dart';
@@ -12,6 +14,27 @@ import 'package:typer_kids/providers/typing_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
+  group('game unlocks', () {
+    test(
+      'every game lock points to a real lesson in the active curriculum',
+      () {
+        for (final entry in GameUnlocks.lessonByRoute.entries) {
+          final lesson = LessonCurriculum.byId(entry.value);
+          expect(lesson, isNotNull, reason: '${entry.key} -> ${entry.value}');
+          expect(GameUnlocks.lessonTitleFor(entry.key), lesson!.title);
+        }
+      },
+    );
+
+    test('game milestones progress through the course', () {
+      final orders = GameUnlocks.lessonByRoute.values
+          .map((id) => LessonCurriculum.byId(id)!.orderIndex)
+          .toList();
+      expect(orders.toSet().length, orders.length);
+      expect(orders.every((order) => order >= 1), isTrue);
+    });
+  });
+
   group('ComprehensiveLessonCurriculum', () {
     test('all lessons have unique IDs and non-empty exercises', () {
       final lessons = ComprehensiveLessonCurriculum.allLessons;
@@ -26,8 +49,9 @@ void main() {
     });
 
     test('includes the new punctuation, fun theme, and story lessons', () {
-      final titles =
-          ComprehensiveLessonCurriculum.allLessons.map((l) => l.title).toSet();
+      final titles = ComprehensiveLessonCurriculum.allLessons
+          .map((l) => l.title)
+          .toSet();
       expect(titles, contains('Question Marks'));
       expect(titles, contains('Excited Lines'));
       expect(titles, contains('Apostrophes'));
@@ -143,9 +167,15 @@ void main() {
     });
 
     test('caps the focus keys at the maximum', () {
-      final lesson = PracticeGenerator.buildTrickyKeysLesson(
-        ['a', 'b', 'c', 'd', 'e', 'f', 'g'],
-      );
+      final lesson = PracticeGenerator.buildTrickyKeysLesson([
+        'a',
+        'b',
+        'c',
+        'd',
+        'e',
+        'f',
+        'g',
+      ]);
       expect(lesson.focusKeys.length, PracticeGenerator.maxFocusKeys);
     });
 

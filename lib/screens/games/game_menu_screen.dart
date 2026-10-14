@@ -5,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/theme/app_colors.dart';
+import '../../data/game_unlocks.dart';
 import '../../providers/progress_provider.dart';
 import '../../widgets/shortcut_badge.dart';
 import '../../widgets/pokemon_sprite.dart';
@@ -20,20 +21,11 @@ class GameMenuScreen extends StatefulWidget {
 class _GameMenuScreenState extends State<GameMenuScreen> {
   final FocusNode _focusNode = FocusNode();
 
-  static const _requirements = <String, (String, String)>{
-    '/games/defend-temple': ('hr-05', 'Home Row Party!'),
-    '/games/falling-words': ('hr-08', 'Home Row Master!'),
-    '/games/word-bubbles': ('tr-03', 'T and Y in the Middle'),
-    '/games/speed-chase': ('tr-06', 'Top Row Review'),
-    '/games/key-critters': ('br-03', 'X and . (Period)'),
-    '/games/story-sprint': ('br-06', 'Bottom Row Review'),
-  };
-
   void _openGame(String route) {
-    final requirement = _requirements[route]!;
+    final lessonId = GameUnlocks.lessonIdFor(route);
     final unlocked = context
         .read<ProgressProvider>()
-        .getProgress(requirement.$1)
+        .getProgress(lessonId)
         .completed;
     if (unlocked) {
       context.push(route);
@@ -41,7 +33,9 @@ class _GameMenuScreenState extends State<GameMenuScreen> {
     }
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('Finish “${requirement.$2}” to unlock this game.'),
+        content: Text(
+          'Finish “${GameUnlocks.lessonTitleFor(route)}” to unlock this game.',
+        ),
       ),
     );
   }
@@ -111,8 +105,14 @@ class _GameMenuScreenState extends State<GameMenuScreen> {
                   shortcut: '1',
                   color: const Color(0xFF8B0000),
                   compact: !isTall,
-                  unlockLesson: 'Home Row Party!',
-                  unlocked: progress.getProgress('hr-05').completed,
+                  unlockLesson: GameUnlocks.lessonTitleFor(
+                    '/games/defend-temple',
+                  ),
+                  unlocked: progress
+                      .getProgress(
+                        GameUnlocks.lessonIdFor('/games/defend-temple'),
+                      )
+                      .completed,
                   onTap: () => _openGame('/games/defend-temple'),
                 ),
                 _GameCard(
@@ -122,8 +122,14 @@ class _GameMenuScreenState extends State<GameMenuScreen> {
                   shortcut: '2',
                   color: AppColors.primary,
                   compact: !isTall,
-                  unlockLesson: 'Home Row Master!',
-                  unlocked: progress.getProgress('hr-08').completed,
+                  unlockLesson: GameUnlocks.lessonTitleFor(
+                    '/games/falling-words',
+                  ),
+                  unlocked: progress
+                      .getProgress(
+                        GameUnlocks.lessonIdFor('/games/falling-words'),
+                      )
+                      .completed,
                   onTap: () => _openGame('/games/falling-words'),
                 ),
                 _GameCard(
@@ -133,8 +139,14 @@ class _GameMenuScreenState extends State<GameMenuScreen> {
                   shortcut: '3',
                   color: const Color(0xFF26C6DA),
                   compact: !isTall,
-                  unlockLesson: 'T and Y in the Middle',
-                  unlocked: progress.getProgress('tr-03').completed,
+                  unlockLesson: GameUnlocks.lessonTitleFor(
+                    '/games/word-bubbles',
+                  ),
+                  unlocked: progress
+                      .getProgress(
+                        GameUnlocks.lessonIdFor('/games/word-bubbles'),
+                      )
+                      .completed,
                   onTap: () => _openGame('/games/word-bubbles'),
                 ),
                 _GameCard(
@@ -144,8 +156,14 @@ class _GameMenuScreenState extends State<GameMenuScreen> {
                   shortcut: '4',
                   color: const Color(0xFFE53935),
                   compact: !isTall,
-                  unlockLesson: 'Top Row Review',
-                  unlocked: progress.getProgress('tr-06').completed,
+                  unlockLesson: GameUnlocks.lessonTitleFor(
+                    '/games/speed-chase',
+                  ),
+                  unlocked: progress
+                      .getProgress(
+                        GameUnlocks.lessonIdFor('/games/speed-chase'),
+                      )
+                      .completed,
                   onTap: () => _openGame('/games/speed-chase'),
                 ),
                 _GameCard(
@@ -155,8 +173,14 @@ class _GameMenuScreenState extends State<GameMenuScreen> {
                   shortcut: '5',
                   color: const Color(0xFF43A047),
                   compact: !isTall,
-                  unlockLesson: 'X and . (Period)',
-                  unlocked: progress.getProgress('br-03').completed,
+                  unlockLesson: GameUnlocks.lessonTitleFor(
+                    '/games/key-critters',
+                  ),
+                  unlocked: progress
+                      .getProgress(
+                        GameUnlocks.lessonIdFor('/games/key-critters'),
+                      )
+                      .completed,
                   onTap: () => _openGame('/games/key-critters'),
                 ),
                 _GameCard(
@@ -166,8 +190,14 @@ class _GameMenuScreenState extends State<GameMenuScreen> {
                   shortcut: '6',
                   color: const Color(0xFFFB8C00),
                   compact: !isTall,
-                  unlockLesson: 'Bottom Row Review',
-                  unlocked: progress.getProgress('br-06').completed,
+                  unlockLesson: GameUnlocks.lessonTitleFor(
+                    '/games/story-sprint',
+                  ),
+                  unlocked: progress
+                      .getProgress(
+                        GameUnlocks.lessonIdFor('/games/story-sprint'),
+                      )
+                      .completed,
                   onTap: () => _openGame('/games/story-sprint'),
                 ),
               ];
