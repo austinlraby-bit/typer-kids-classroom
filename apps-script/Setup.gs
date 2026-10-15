@@ -57,7 +57,7 @@ function onOpen() {
   SpreadsheetApp.getUi().createMenu('KeyQuest')
     .addItem('Set up / repair sheets', 'setupKeyQuest')
     .addItem('Hash new or changed PINs', 'hashStudentPins')
-    .addItem('Refresh weekly summary', 'createWeeklySummary_')
+    .addItem('Refresh weekly summary', 'refreshWeeklySummary')
     .addItem('Reset selected student progress', 'resetSelectedStudentProgress')
     .addToUi();
 }
@@ -99,28 +99,69 @@ function resetSelectedStudentProgress() {
 function createWeeklySummary_() {
   const ss = getSpreadsheet_();
   const summary = ss.getSheetByName(KQ.SUMMARY);
+  const students = ss.getSheetByName(KQ.STUDENTS);
   summary.clear();
-  if (summary.getMaxColumns() < 29) summary.insertColumnsAfter(summary.getMaxColumns(), 29 - summary.getMaxColumns());
-  summary.getRange('A1').setValue('Student');
-  summary.getRange('B1').setFormula('=TODAY()-WEEKDAY(TODAY(),2)+1-7*7');
-  summary.getRange('C1').setFormula('=B1+7');
-  summary.getRange('B1:C1').autoFill(summary.getRange('B1:AB1'), SpreadsheetApp.AutoFillSeries.DEFAULT_SERIES);
-  summary.getRange('B1:AB1').setNumberFormat('mmm d')
-    .setHorizontalAlignment('center');
-  summary.getRange('A2').setFormula('=SORT(FILTER(Students!B2:B&IF(Students!C2:C<>""," "&Students!C2:C&".",""),Students!A2:A<>"",Students!E2:E<>FALSE))');
-  summary.getRange('AC1').setValue('Student ID');
-  summary.getRange('AC2').setFormula('=SORT(FILTER(Students!A2:A,Students!A2:A<>"",Students!E2:E<>FALSE),FILTER(Students!B2:B&IF(Students!C2:C<>""," "&Students!C2:C&".",""),Students!A2:A<>"",Students!E2:E<>FALSE),TRUE)');
-  summary.getRange('B2').setFormula('=IF($A2="","",IFERROR(ROUND(SUMIFS(Sessions!$D:$D,Sessions!$B:$B,$AC2,Sessions!$C:$C,">="&B$1,Sessions!$C:$C,"<"&B$1+7)/60,1),0))');
-  summary.getRange('B2').autoFill(summary.getRange('B2:AB2'), SpreadsheetApp.AutoFillSeries.DEFAULT_SERIES);
-  summary.getRange('B2:AB2').autoFill(summary.getRange('B2:AB200'), SpreadsheetApp.AutoFillSeries.DEFAULT_SERIES);
   const goal = weeklyGoal_();
-  const rule = SpreadsheetApp.newConditionalFormatRule().whenNumberGreaterThanOrEqualTo(goal)
-    .setBackground('#d9ead3').setFontColor('#274e13').setRanges([summary.getRange('B2:AB200')]).build();
-  summary.setConditionalFormatRules([rule]);
-  summary.setFrozenRows(1); summary.setFrozenColumns(1);
-  summary.hideColumns(29);
-  summary.getRange('A1:AB1').setFontWeight('bold').setBackground('#4f6df5').setFontColor('#ffffff');
-  summary.autoResizeColumns(1, 28);
+  const roster = students && students.getLastRow() >= 2
+    ? students.getRange(2, 1, students.getLastRow() - 1, 5).getDisplayValues()
+      .filter(r => r[0] && String(r[4]).toLowerCase() !== 'false' && r[4] !== '0')
+      .map(r => ({ id: String(r[0]), name: `${r[1]}${r[2] ? ' ' + r[2] + '.' : ''}` }))
+      .sort((a, b) => a.name.localeCompare(b.name))
+    : [];
+
+  const headers = ['Student', 'This Week', 'Goal', 'Status', 'Last Week', '2 Weeks Ago', '3 Weeks Ago', '4 Weeks Ago', 'Student ID'];
+  summary.getRange(1, 1, 1, headers.length).setValues([headers]);
+  if (roster.length) {
+    summary.getRange(2, 1, roster.length, 1).setValues(roster.map(r => [r.name]));
+    summary.getRange(2, 9, roster.length, 1).setValues(roster.map(r => [r.id]));
+    summary.getRange(2, 3, roster.length, 1).setValues(roster.map(() => [goal]));
+
+    const weekColumns = [2, 5, 6, 7, 8];
+    weekColumns.forEach((column, weekIndex) => {
+      const offset = weekIndex * 7;
+      const start = `TODAY()-WEEKDAY(TODAY(),2)+1-${offset}`;
+      const formulas = roster.map((_, i) => {
+        const row = i + 2;
+        return [`=IFERROR(ROUND(SUMIFS(Sessions!$D:$D,Sessions!$B:$B,$I${row},Sessions!$C:$C,">="&(${start}),Sessions!$C:$C,"<"&(${start})+7)/60,1),0)`];
+      });
+      summary.getRange(2, column, roster.length, 1).setFormulas(formulas);
+    });
+
+    summary.getRange(2, 4, roster.length, 1).setFormulas(roster.map((_, i) => {
+      const row = i + 2;
+      return [`=IF(B${row}>=C${row},"Goal met ✓",IF(B${row}=0,"Not started",ROUND(C${row}-B${row},1)&" min to go"))`];
+    }));
+    summary.getRange(2, 2, roster.length, 7).setVerticalAlignment('middle');
+    summary.getRange(2, 2, roster.length, 1).setFontWeight('bold');
+  }
+
+  const lastRow = Math.max(2, roster.length + 1);
+  const metGoal = SpreadsheetApp.newConditionalFormatRule()
+    .whenFormulaSatisfied('=$B2>=$C2')
+    .setBackground('#d9ead3').setFontColor('#274e13')
+    .setRanges([summary.getRange(2, 2, lastRow - 1, 3)]).build();
+  const active = SpreadsheetApp.newConditionalFormatRule()
+    .whenFormulaSatisfied('=AND($B2>0,$B2<$C2)')
+    .setBackground('#fff2cc').setFontColor('#7f6000')
+    .setRanges([summary.getRange(2, 2, lastRow - 1, 3)]).build();
+  summary.setConditionalFormatRules([metGoal, active]);
+  summary.setFrozenRows(1);
+  summary.setFrozenColumns(1);
+  summary.hideColumns(9);
+  summary.getRange(1, 1, 1, 8).setFontWeight('bold').setBackground('#4f6df5')
+    .setFontColor('#ffffff').setHorizontalAlignment('center');
+  summary.getRange(1, 1).setHorizontalAlignment('left');
+  summary.setColumnWidth(1, 170);
+  summary.setColumnWidth(2, 95);
+  summary.setColumnWidth(3, 75);
+  summary.setColumnWidth(4, 115);
+  summary.setColumnWidths(5, 4, 100);
+  summary.getRange(1, 1, lastRow, 8).setWrap(false);
+}
+
+function refreshWeeklySummary() {
+  createWeeklySummary_();
+  return 'Weekly Summary refreshed.';
 }
 
 function weeklyGoal_() {
