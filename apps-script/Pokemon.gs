@@ -83,9 +83,40 @@ function creditPokemonPractice_(studentId, seconds) {
   state.practiceSeconds += Math.min(90, Math.floor(seconds));
   while (state.practiceSeconds >= threshold) {
     state.practiceSeconds -= threshold;
-    state.unclaimedEncounters++;
+    // Practice rewards used to accumulate in an invisible queue after the
+    // manual "start encounter" button was removed. Grant each earned catch
+    // immediately on the server instead, so closing the iPad or missing an
+    // animation can never cost the student a Pokémon.
+    grantAutomaticPokemon_(state, 'practice_auto_' + Utilities.getUuid().replace(/-/g, ''), false);
   }
   savePokemonState_(state);
+}
+
+function grantAutomaticPokemon_(state, eventId, special) {
+  const prior = findPokemonTransaction_(state.transactions, eventId);
+  if (prior.found) return prior.pokemonId || 0;
+
+  const progress = loadProgress_(state.studentId, '');
+  const unlocked = unlockedRegionCount_(completedLessonIds_(progress).length);
+  const originalRegion = Math.max(0, Math.min(unlocked - 1, Number(state.selectedRegion) || 0));
+  let pokemonId = 0;
+
+  // Honor the student's selected region first. If it is exhausted, continue
+  // through their other unlocked regions rather than silently losing a catch.
+  for (let offset = 0; offset < unlocked && !pokemonId; offset++) {
+    state.selectedRegion = (originalRegion + offset) % unlocked;
+    pokemonId = choosePokemon_(state, !!special, eventId);
+  }
+  if (!pokemonId) {
+    state.selectedRegion = originalRegion;
+    state.unclaimedEncounters++;
+    return 0;
+  }
+
+  state.caught[String(pokemonId)] = Math.floor(Date.now() / 1000);
+  if (!state.companionId) state.companionId = pokemonId;
+  state.transactions.push({id:eventId, pokemonId:pokemonId});
+  return pokemonId;
 }
 
 function claimPokemon(token, request) {
