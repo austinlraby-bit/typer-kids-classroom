@@ -99,12 +99,17 @@ class _ResultsScreenState extends State<ResultsScreen>
   Future<void> _claimRewards() async {
     if (_passed != true || !mounted) return;
     final provider = context.read<PokemonProvider>();
-    final completed = context.read<ProgressProvider>().completedLessons;
+    final progressProvider = context.read<ProgressProvider>();
+    final completed = progressProvider.completedLessons;
     final lessonPart = widget.lesson.id.replaceAll(
       RegExp(r'[^A-Za-z0-9_-]'),
       '_',
     );
-    final lessonEvent = 'lesson_$lessonPart';
+    // A passed replay is still real practice. Include the durable attempt
+    // number in the receipt so each successful activity earns one encounter,
+    // while refreshes and retries of the same result remain idempotent.
+    final attempt = progressProvider.getProgress(widget.lesson.id).attempts;
+    final lessonEvent = 'lesson_${lessonPart}_attempt_$attempt';
     final unit = completed > 0 && completed % 10 == 0 ? completed ~/ 10 : 0;
     final unitEvent = 'unit_reward_$unit';
     final band = widget.stats.accuracy.floor() ~/ 3;

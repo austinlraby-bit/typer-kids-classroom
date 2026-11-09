@@ -143,9 +143,18 @@ function claimPokemon(token, request) {
       let special = false;
       if (source === 'lesson') {
         const lessonId = String(request.lessonId || '');
-        if (eventId !== 'lesson_' + safeEventPart_(lessonId) ||
-            (completed.indexOf(lessonId) === -1 && !instantTicket)) throw new Error('Finish this lesson successfully before catching a Pokémon.');
         const lessonRow = progress.profile.typerKids && progress.profile.typerKids.progress && progress.profile.typerKids.progress[lessonId];
+        const legacyEvent = 'lesson_' + safeEventPart_(lessonId);
+        const attemptPrefix = legacyEvent + '_attempt_';
+        const attempt = eventId.indexOf(attemptPrefix) === 0
+          ? Math.floor(Number(eventId.slice(attemptPrefix.length)) || 0) : 0;
+        const recordedAttempts = Math.floor(Number(lessonRow && lessonRow.n) || 0);
+        const validReceipt = eventId === legacyEvent ||
+          (attempt > 0 && eventId === attemptPrefix + attempt);
+        if (!validReceipt || (completed.indexOf(lessonId) === -1 && !instantTicket) ||
+            (attempt > recordedAttempts && !instantTicket)) {
+          throw new Error('Finish this lesson successfully before catching a Pokémon.');
+        }
       } else if (source === 'practice') {
         if (state.unclaimedEncounters < 1) throw new Error('Keep practicing to earn your next encounter.');
         state.unclaimedEncounters--;
